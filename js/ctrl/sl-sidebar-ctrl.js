@@ -10,4 +10,11 @@ angular.module('gwf4')
 		$state.go('gamelist');
 	};
 
+	$scope.newGame = function() {
+		console.log('SLSidebarCtrl.newGame()');
+		WebsocketSrvc.withConn(function(){
+			WebsocketSrvc.sendCommand('sl_newgame');
+		});
+	};
+
 });

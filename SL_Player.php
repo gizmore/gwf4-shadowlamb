@@ -3,14 +3,17 @@ require_once 'SL_Race.php';
 
 class SL_Player extends GDO
 {
+	const VIEW_LENGTH = 5;
+	
 	public static $USER_FIELDS = array('user_name', 'user_guest_name', 'user_gender', 'user_regdate', 'user_level', 'user_credits');
 	public static function userFields() { return '*, '.implode(',', self::$USER_FIELDS); }
 	public static $JOINS = array('user');
 	
+	public static $GENDERS = array('male', 'female');
 	public static $MODES = array('attack', 'defend');
 	public static $COLORS = array('red', 'black', 'blue', 'green');
 	public static $ELEMENTS = array('earth', 'wind', 'water', 'fire');
-	public static $STATS = array('hp', 'mp', 'base_hp', 'base_mp', 'max_hp', 'max_mp');
+	public static $STATS = array('hp', 'mp', 'base_hp', 'base_mp');
 	public static $SKILLS = array('fighter', 'ninja', 'priest', 'wizard');
 	public static $XP = array('fighter_xp', 'ninja_xp', 'priest_xp', 'wizard_xp');
 	public static $ATTRIBUTES = array('strength', 'dexterity', 'wisdom', 'intelligence');
@@ -20,6 +23,13 @@ class SL_Player extends GDO
 	public static function elementsEnum() { return array_merge(array('none', self::$ELEMENTS)); }
 	public static function modesEnum() { return array_merge(array('none', self::$MODES)); }
 	public static function skillsEnum() { return array_merge(array('none', self::$SKILLS)); }
+	
+	public function raceInt() { return self::enumToInt($this->getRace(), SL_Race::races()); }
+	public function genderInt() { return self::enumToInt($this->getGender(), self::$GENDERS); }
+	public function elementInt() { return self::enumToInt($this->getElement(), self::$ELEMENTS); }
+	public function colorInt() { return self::enumToInt($this->getColor(), self::$COLORS); }
+	public function skillInt() { return self::enumToInt($this->getSkill(), self::$SKILLS); }
+	public static function enumToInt($value, array $enum) { $index = array_search($value, $enum, true); return $index === false ? 0 : $index + 1; }
 	
 	public static $FEELS = array('health', 'endurance', 'sober', 'awake', 'brave', 'satiness', 'drought', 'carry');
 	private $water = 100, $tired = 0, $food = 100, $alc = 0, $frightened = 0, $endurance = 0;
@@ -47,7 +57,7 @@ class SL_Player extends GDO
 
 				'p_hp' => array(GDO::MEDIUM|GDO::UINT, 0),
 				'p_mp' => array(GDO::MEDIUM|GDO::UINT, 0),
-				'p_base_hp' => array(GDO::MEDIUM|GDO::UINT, 10),
+				'p_base_hp' => array(GDO::MEDIUM|GDO::UINT, 0),
 				'p_base_mp' => array(GDO::MEDIUM|GDO::UINT, 0),
 
 				'p_strength' => array(GDO::MEDIUM|GDO::UINT, 0),
@@ -86,10 +96,138 @@ class SL_Player extends GDO
 	##############
 	### Static ###
 	##############
+	
+	############
+	### Move ###
+	############
+	public function setGame($game)
+	{
+		$this->game = $game;
+		$this->x = $this->y = $this->z = 0;
+	}
+	
+	public function setToFloorIndex(SL_Floor $floor, $index)
+	{
+		$this->x = $floor->x($index);
+		$this->y = $floor->y($index);
+		$this->z = $floor;
+	}
+	
+	public function requestFirstMap()
+	{
+		$x = $this->x; $y = $this->y; $r = self::VIEW_LENGTH;
+		$this->requestMap($x-$r, $y-$r, $x+$r, $y+$r);
+	}
+	
+	private static $DIR_X = array('N' => 0, 'S' => 0, 'E' => 1, 'W' => -1);
+	private static $DIR_Y = array('N' => -1, 'S' => 1, 'E' => 0, 'W' => 0);
+	public function move($direction)
+	{
+		$xoff = self::$DIR_X[$direction];
+		$yoff = self::$DIR_Y[$direction];
+		if (!$this->z->canMove($this->x + $xoff, $this->y + $yoff))
+		{
+			return $this->sendError(SL_Commands::ERR_WAY_BLOCKED);
+		}
+		$this->x += $xoff;
+		$this->y += $yoff;
+		$this->afterMove($direction);
+	}
+	
+	private function afterMove($direction)
+	{
+		$x = $this->x; $y = $this->y; $r = self::VIEW_LENGTH;
+		switch ($direction)
+		{
+			case 'N': case 'S': $this->requestMap($x-$r, $y, $x+$r, $y); break;
+			case 'E': case 'W': $this->requestMap($x, $y-$r, $x, $y+$r); break;
+		}
+		$this->game->sendBinary($this->payloadPos());
+	}
+	
+	private function requestMap($x1, $y1, $x2, $y2)
+	{
+		$this->sendBinary($this->z->payloadMap($x1, $y1, $x2, $y2));
+	}
+	
+	################
+	### Messages ###
+	################
+	public function conn() { return GWS_Global::getConnectionInterface($this); }
+	public function sendError($code) { $this->sendBinary(GWS_Message::wr16(0x0000).GWS_Message::wr16($code)); }
+	public function sendText($payload) { printf("%s << %s\n", $this->displayName(), $payload); $this->conn()->send($payload); }
+	public function sendBinary($payload) { printf("%s << BIN\n", $this->displayName()); GWS_ServerUtil::hexdump($payload); $this->conn()->sendBinary($payload); }
+	###############
+	### Payload ###
+	###############
+	public function payloadPos()
+	{
+		return
+			GWS_Message::wr16(SL_Commands::SRV_POS).
+			GWS_Message::wr32($this->getID()).
+			GWS_Message::wr8($this->x).GWS_Message::wr8($this->y).GWS_Message::wr8($this->z->z());
+	}
+	
+	public function payloadOwn()
+	{
+		return GWS_Message::wr16(SL_Commands::SRV_OWN).$this->payloadBase().$this->payloadExtended().$this->payloadItems().$this->payloadEffects();
+	}
+	
+	public function payloadOther()
+	{
+		return GWS_Message::wr16(SL_Commands::SRV_PLAYER).$this->payloadBase();
+	}
+	
+	private function payloadBase()
+	{
+		$payload  = GWS_Message::wr32($this->getID()).GWS_Message::wrS($this->displayName());
+		$payload .= GWS_Message::wr8(self::raceInt());
+		$payload .= GWS_Message::wr8(self::genderInt());
+		$payload .= GWS_Message::wr8(self::elementInt());
+		$payload .= GWS_Message::wr8(self::colorInt());
+		$payload .= GWS_Message::wr8(self::skillInt());
+		
+		$payload .= GWS_Message::wr16($this->baseLevel).GWS_Message::wr16($this->adjustedLevel);
+		$payload .= GWS_Message::wr16($this->hp()).GWS_Message::wr16($this->mp());
+		$payload .= GWS_Message::wr16($this->maxHP()).GWS_Message::wr16($this->maxMP());
 
+		foreach (self::$ATTRIBUTES as $field)
+		{
+			$payload .= GWS_Message::wr8($this->base($field));
+			$payload .= GWS_Message::wr8($this->power($field));
+		}
+		foreach (self::$SKILLS as $field)
+		{
+			$payload .= GWS_Message::wr8($this->base($field));
+			$payload .= GWS_Message::wr8($this->power($field));
+		}
+		return $payload;
+	}
+	
+	private function payloadExtended()
+	{
+		$payload = '';
+		foreach (self::$SKILLS as $field)
+		{
+			$payload .= GWS_Message::wr32((int)$this->getVar('p_'.$field.'_xp'));
+		}
+		return $payload;
+	}
+	
+	private function payloadEffects()
+	{
+		return '';
+	}
+	
+	private function payloadItems()
+	{
+		return '';
+	}
+	
 	############
 	### User ###
 	############
+	public function getID() { return $this->getVar('p_uid'); }
 	public function getUserID() { return $this->getVar('p_uid'); }
 	public function setUser(GWF_User $user) { $this->user = $user; }
 	public function getUser() { return $this->user; }
@@ -112,7 +250,10 @@ class SL_Player extends GDO
 	public function getRace() { $race = $this->getVar('p_race'); return $race === 'none' ? 'human' : $race; }
 	public function getGender() { return $this->getVar('user_gender'); }
 	public function getColor() { return $this->getVar('p_active_color'); }
-
+	public function getElement() { return $this->getVar('p_active_element'); }
+	public function getMode() { return $this->getVar('p_active_mode'); }
+	public function getSkill() { return $this->getVar('p_active_skill'); }
+	
 	public function isDead() { return $this->hp() <= 0; }
 	public function giveHP($hp) { $this->base['hp'] = Common::clamp($this->hp() + $hp, 0, $this->maxHP()); $this->feel('health'); }
 	public function giveMP($mp) { $this->base['mp'] = Common::clamp($this->mp() + $mp, 0, $this->maxMP()); }
@@ -174,6 +315,7 @@ class SL_Player extends GDO
 	public function priest() { return $this->power('priest'); }
 	public function wizard() { return $this->power('wizard'); }
 
+	public function carry() { return 0.0; }
 	public function health() { return Common::clamp($this->hp() /  min(30, $this->maxHP()), 0.0, 1.0); }
 	public function endurance() { return Common::clamp($this->endurance / 60.0, 0.25, 1.0); }
 	public function sober() { return 1.0; }
@@ -214,37 +356,23 @@ class SL_Player extends GDO
 	##############
 	### Create ###
 	##############
-	public static function getByName($name)
+	public static function getByID($id) { return self::getByWhere("p_uid=".intval($id)); }
+	public static function getByName($name) { return self::getByWhere(sprintf("user_name='%s'", self::escape($name))); }
+	public static function getByWhere($where)
 	{
-		$ename = GDO::escape($name);
-		if ($player = GDO::table(__CLASS__)->selectFirstObject(self::userFields(), "user_name='$ename'", '', '', array('user')))
+		if ($player = GDO::table(__CLASS__)->selectFirstObject(self::userFields(), $where, '', '', array('user')))
 		{
 			$player->afterLoad();
 		}
 		return $player;
 	}
-
-	##################
-	### Connection ###
-	##################
-	public function sendError($i18nKey) { return $this->sendCommand('ERR', $i18nKey); }
-	public function sendJSONCommand($command, $object) { return $this->sendCommand($command, json_encode($object)); }
-	public function sendCommand($command, $payload) { return $this->send("$command:$payload"); }
-	public function send($messageText) { GWS_Global::send($this->user, $messageText); }
-
-	public function disconnect()
-	{
-		$this->user = null;
-	}
-
+	
 	##############
 	### Rehash ###
 	##############
 	public function afterLoad()
 	{
 		$this->base = array();
-		$this->base['hp'] = 0;
-		$this->base['mp'] = 0;
 		$this->adjusted = array();
 		$this->rehash();
 		$this->respawn();
@@ -311,8 +439,10 @@ class SL_Player extends GDO
 
 	private function rehashStats()
 	{
-		$this->adjusted['max_hp'] += $this->strength() * 3 + $this->dexterity() * 1;
-		$this->adjusted['max_mp'] += $this->wisdom() * 1 + $this->intelligence() * 2;
+		$this->adjusted['base_hp'] += $this->strength() * 3 + $this->dexterity() * 1;
+		$this->adjusted['base_mp'] += $this->wisdom() * 1 + $this->intelligence() * 2;
+		$this->adjusted['max_hp'] = $this->adjusted['base_hp'];
+		$this->adjusted['max_mp'] = $this->adjusted['base_mp'];
 	}
 
 	private function rehashFeels()

@@ -35,8 +35,8 @@ class TGCAI_Robber extends SL_AIScript
 	{
 		if ($target = $this->currentTarget())
 		{
-			$this->bot->aiAttack($target);
-			$this->bot->aiMoveNear($target);
+// 			$this->bot->aiAttack($target);
+// 			$this->bot->aiMoveNear($target);
 		}
 	}
 }

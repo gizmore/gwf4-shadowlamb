@@ -19,8 +19,7 @@ final class SL_Global
 		{
 			self::$TYPED_BOTS[$type] = array();
 		}
-// 		self::$GAMES = new SL_Games();
-// 		$game = self::$GAMES->createGame();
+		self::$GAMES = new SL_Games();
 	}
 
 	############
@@ -42,65 +41,70 @@ final class SL_Global
 		return $array[array_rand($array)];
 	}
 	
+	public static function gameByName($name)
+	{
+		return self::$GAMES->getGame($name);
+	}
+	
 	###############
 	### Players ###
 	###############
 	public static function addPlayer(SL_Player $player)
 	{
-		$name = $player->getName();
+		$id = $player->getID();
 		if ($player->isBot())
 		{
-			self::$BOTS[$name] = $player;
-			self::$TYPED_BOTS[$player->getType()][$name] = $player;
+			self::$BOTS[$id] = $player;
+			self::$TYPED_BOTS[$player->getType()][$id] = $player;
 		}
 		else
 		{
-			self::$HUMANS[$name] = $player;
+			self::$HUMANS[$id] = $player;
 		}
-		self::$PLAYERS[$name] = $player;
+		self::$PLAYERS[$id] = $player;
 	}
 
 	public static function removePlayer(SL_Player $player)
 	{
-		$name = $player->getName();
+		$id = $player->getID();
 		if ($player->isBot())
 		{
-			unset(self::$BOTS[$name]);
-			unset(self::$TYPED_BOTS[$player->getType()][$name]);
+			unset(self::$BOTS[$id]);
+			unset(self::$TYPED_BOTS[$player->getType()][$id]);
 		}
 		else
 		{
-			unset(self::$HUMANS[$name]);
+			unset(self::$HUMANS[$id]);
 		}
-		unset(self::$PLAYERS[$name]);
+		unset(self::$PLAYERS[$id]);
 	}
 	
 	public static function getOrCreatePlayer(GWF_User $user)
 	{
-		$name = $user->getName();
-		if (!($player = self::getOrLoadPlayer($name)))
+		$id = $user->getID();
+		if (!($player = self::getOrLoadPlayer($id)))
 		{
 			$player = self::createPlayer($user);
-			self::$PLAYERS[$name] = $player;
+			self::addPlayer($player);
 		}
 		$player->setUser($user);
 		return $player;
 	}
 	
-	public static function getPlayer($name)
+	public static function getPlayer($id)
 	{
-		return isset(self::$PLAYERS[$name]) ? self::$PLAYERS[$name] : false;
+		return isset(self::$PLAYERS[$id]) ? self::$PLAYERS[$id] : false;
 	}
 	
-	public static function getOrLoadPlayer($name)
+	public static function getOrLoadPlayer($id)
 	{
-		if ($player = self::getPlayer($name))
+		if ($player = self::getPlayer($id))
 		{
 			return $player;
 		}
-		if ($player = self::loadPlayer($name))
+		if ($player = self::loadPlayer($id))
 		{
-			self::$PLAYERS[$name] = self::$HUMANS[$name] = $player;
+			self::$PLAYERS[$id] = self::$HUMANS[$id] = $player;
 			return $player;
 		}
 		return false;
@@ -111,9 +115,9 @@ final class SL_Global
 		return SL_PlayerFactory::human($user);
 	}
 	
-	private static function loadPlayer($name)
+	private static function loadPlayer($id)
 	{
-		return SL_Player::getByName($name);
+		return SL_Player::getByID($id);
 	}
 	
 	###############

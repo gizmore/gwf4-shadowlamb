@@ -39,18 +39,18 @@ class TGCAI_Nimda extends SL_AIScript
 	
 	public function tick($tick)
 	{
-		if ($tick % 30)
-		{
-			if ($target = $this->currentEnemyTarget())
-			{
-				$this->bruteForce($target);
-				$this->moveNear($target, true);
-			}
-			else
-			{
-				$this->heal($this->bot);
-			}
-		}
+// 		if ($tick % 30)
+// 		{
+// 			if ($target = $this->currentEnemyTarget())
+// 			{
+// 				$this->bruteForce($target);
+// 				$this->moveNear($target, true);
+// 			}
+// 			else
+// 			{
+// 				$this->heal($this->bot);
+// 			}
+// 		}
 	}
 	
 	protected function bruteForce($target)

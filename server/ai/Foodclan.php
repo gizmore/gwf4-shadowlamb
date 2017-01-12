@@ -25,8 +25,8 @@ class TGCAI_Foodclan extends SL_AIScript
 
 	public function tick($tick)
 	{
-		$target = $this->currentTarget();
-		$this->bot->aiAttack($target);
-		$this->bot->aiMoveNear($target);
+// 		$target = $this->currentTarget();
+// 		$this->bot->aiAttack($target);
+// 		$this->bot->aiMoveNear($target);
 	}
 }

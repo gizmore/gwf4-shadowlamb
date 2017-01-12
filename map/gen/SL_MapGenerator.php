@@ -41,6 +41,7 @@ final class SL_MapGenerator
 		
 		$this->game->map()->addFloor($this->floor);
 		$this->floor->debugWalls();
+		return $this->floor;
 	}
 	
 	#############
@@ -95,7 +96,7 @@ final class SL_MapGenerator
 			return;
 		}
 
-		$this->floor->setTile($x, $y, SL_Tile::GEN_VISITED|SL_Tile::STONE);
+		$this->floor->setTile($x, $y, SL_Tile::GEN_VISITED|SL_Tile::DUST);
 		foreach ($this->neighbours($x, $y) as $index)
 		{
 			if (!$this->floor->tileIndexIs($index, SL_Tile::GEN_VISITED))

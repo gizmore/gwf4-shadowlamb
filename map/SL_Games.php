@@ -29,7 +29,8 @@ final class SL_Games
 	
 	public function addGame(SL_Game $game)
 	{
-		$this->games[] = $game;
+		$game->setName(sprintf('Game %d', count($this->games)+1));
+		$this->games[$game->name()] = $game;
 	}
 	
 	public function createGame($config=array())
@@ -37,6 +38,13 @@ final class SL_Games
 		$game = new SL_Game($config);
 		$game->createFloor();
 		$this->addGame($game);
+		return $game;
 	}
+	
+	public function getGame($name)
+	{
+		return isset($this->games[$name]) ? $this->games[$name] : null;
+	}
+	
 	
 }

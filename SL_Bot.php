@@ -22,7 +22,8 @@ final class SL_Bot extends SL_Player
 	############
 	### Stub ###
 	############
-	public function send($messageText) { printf("%s << %s\n", $this->displayName(), $messageText); }
+	public function sendText($messageText) { printf("%s << %s\n", $this->displayName(), $messageText); }
+	public function sendBinary($messageData) { printf("%s << %s\n", $this->displayName(), 'BINARY'); }
 	
 	############
 	### Kill ###
@@ -56,19 +57,12 @@ final class SL_Bot extends SL_Player
 	public function afterLoad()
 	{
 		$this->script = SL_AIScript::factory($this);
-		$this->initBotPosition();
 		parent::afterLoad();
-	}
-	
-	private function initBotPosition()
-	{
-		$this->setPosition(52.0+rand(1, 1000)/1000, 10.0+rand(1, 1000)/1000);
 	}
 	
 	public function tick($tick)
 	{
 		parent::tick($tick);
-		$this->botPos();
 		$this->command = null;
 		$this->script->tick($tick);
 		if ($this->command)
@@ -76,11 +70,6 @@ final class SL_Bot extends SL_Player
 			list($command, $payload) = $this->command;
 			$this->tickExecute($command, $payload);
 		}
-	}
-	
-	private function botPos()
-	{
-		$this->aiMove($this->lat(), $this->lng(), true);
 	}
 	
 	private function tickExecute($command, $payload)
@@ -95,12 +84,12 @@ final class SL_Bot extends SL_Player
 	###################
 	public function aiMoveNear($player, $instant=false)
 	{
-		if ($player && $player->hasPosition())
-		{
-			$lat = GWF_Random::Rand(0, 1000) / 1000 + $player->lat();
-			$lng = GWF_Random::Rand(0, 1000) / 1000 + $player->lng();
-			$this->aiMove($lat, $lng, $instant);
-		}
+// 		if ($player && $player->hasPosition())
+// 		{
+// 			$lat = GWF_Random::Rand(0, 1000) / 1000 + $player->lat();
+// 			$lng = GWF_Random::Rand(0, 1000) / 1000 + $player->lng();
+// 			$this->aiMove($lat, $lng, $instant);
+// 		}
 	}
 	
 	###############

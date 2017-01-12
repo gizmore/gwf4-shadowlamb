@@ -7,6 +7,7 @@ require_once 'SL_Race.php';
 require_once 'SL_Player.php';
 require_once 'SL_Bot.php';
 require_once 'SL_PlayerFactory.php';
+require_once 'map/SL_Games.php';
 
 final class Module_Shadowlamb extends GWF_Module
 {
@@ -92,7 +93,11 @@ final class Module_Shadowlamb extends GWF_Module
 		$runecost = json_encode($this->runes['runecost']);
 		$levels = json_encode($this->runes['levels']);
 		$version = $this->getVersion();
-		return sprintf('window.SL_CONFIG = { levels: %s, runes: %s, runecost: %s, version: %0.2f };', $levels, $runes, $runecost, $version);
+		$races = json_encode(SL_Race::races());
+		$colors = json_encode(SL_Player::$COLORS);
+		$elements = json_encode(SL_Player::$ELEMENTS);
+		return sprintf('window.SL_CONFIG = { levels: %s, runes: %s, runecost: %s, version: %0.2f, races: %s, colors: %s, elements: %s };',
+				$levels, $runes, $runecost, $version, $races, $colors, $elements);
 	}
 	
 	private function includeWebAssets()
@@ -117,6 +122,7 @@ final class Module_Shadowlamb extends GWF_Module
 		# Model
 		$this->addJavascript('model/sl-player.js');
 		$this->addJavascript('model/sl-item.js');
+		$this->addJavascript('model/sl-map.js');
 		# Ctrl
 		$this->addJavascript('ctrl/sl-ctrl.js');
 		$this->addJavascript('ctrl/sl-gamelist-ctrl.js');
@@ -125,7 +131,7 @@ final class Module_Shadowlamb extends GWF_Module
 // 		$this->addJavascript('srvc/tgc-chat-service.js');
 // 		$this->addJavascript('srvc/tgc-const-service.js');
 // 		$this->addJavascript('srvc/tgc-command-service.js');
-// 		$this->addJavascript('srvc/tgc-player-service.js');
+		$this->addJavascript('srvc/sl-player-srvc.js');
 // 		$this->addJavascript('srvc/tgc-effect-service.js');
 // 		# Dialog
 // 		$this->addJavascript('dlg/tgc-area-dialog.js');

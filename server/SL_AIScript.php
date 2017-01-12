@@ -4,7 +4,7 @@ abstract class SL_AIScript
 	############
 	### Init ###
 	############
-	private static function scriptsPath() { return GWF_PATH.'module/Tamagochi/server/ai'; }
+	private static function scriptsPath() { return GWF_PATH.'module/Shadowlamb/server/ai'; }
 	public static $TYPES = null;
 	public static function init()
 	{
@@ -35,9 +35,9 @@ abstract class SL_AIScript
 	public function random_gold() { return SL_Global::rand(5, 93); }
 	public function random_gender() { return SL_Global::randItem(array('male', 'female')); }
 	public function random_race() { return SL_Global::randItem(SL_Race::playerRaces()); }
-	public function random_mode() { return SL_Global::randItem(SL_Const::$MODES); }
-	public function random_color() { return SL_Global::randItem(SL_Const::$COLORS); }
-	public function random_element() { return SL_Global::randItem(SL_Const::$ELEMENTS); }
+	public function random_mode() { return SL_Global::randItem(SL_Player::$MODES); }
+	public function random_color() { return SL_Global::randItem(SL_Player::$COLORS); }
+	public function random_element() { return SL_Global::randItem(SL_Player::$ELEMENTS); }
 	public function random_fighter() { return SL_Global::averageBase('fighter'); }
 	public function random_ninja() { return SL_Global::averageBase('ninja'); }
 	public function random_priest() { return SL_Global::averageBase('priest'); }

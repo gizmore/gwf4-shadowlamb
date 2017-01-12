@@ -5,6 +5,8 @@ final class SL_Game
 	const DYNAMIC = 2;
 	const TOURNAMENT = 3;
 	
+	private $name;
+	private $owner;
 	private $map;
 	private $config;
 	private $players, $bots, $humans, $items;
@@ -20,6 +22,8 @@ final class SL_Game
 	public function open() { return $this->numPlayers() < $this->maxPlayers(); }
 	public function numFloors() { return $this->map()->numFloors(); }
 	public function numTiles() { return $this->width() * $this->height(); }
+	public function setName($name) { $this->name = $name; }
+	public function name() { return $this->name; }
 	
 	public function defaultConfig()
 	{
@@ -32,6 +36,7 @@ final class SL_Game
 	
 	public function __construct(array $config)
 	{
+		$this->name = '';
 		$this->config = array_merge($this->defaultConfig(), $config);
 		$this->players = array();
 		$this->bots = array();
@@ -39,17 +44,68 @@ final class SL_Game
 		$this->items = array();
 		$this->map = new SL_Map($this);
 	}
+
+	public function canJoin(SL_Player $player)
+	{
+		return ($this->numPlayers() < $this->maxPlayers()) && (!isset($this->humans[$player->getID()]));
+	}
 	
 	public function join(SL_Player $player)
 	{
-		$this->players[] = $player;
+		$pid = $player->getID();
+		$this->players[$pid] = $player;
+		if ($player->isBot())
+		{
+			$this->bots[$pid] = $player;
+		}
+		else
+		{
+			$this->humans[$pid] = $player;
+		}
+		$player->setGame($this);
+		$this->spawn($player);
+		return $this;
+	}
+	
+	public function part(SL_Player $player)
+	{
+		$player->setGame(null);
+		$pid = $player->getID();
+		unset($this->players[$pid]);
+		unset($this->humans[$pid]);
+		unset($this->bots[$pid]);
+	}
+	
+	public function spawn(SL_Player $player)
+	{
+		$floor = $this->map->raspawnFloor($player);
+		$index = $floor->respawnIndex($player);
+		$player->setToFloorIndex($floor, $index);
 	}
 	
 	public function createFloor()
 	{
 		$gen = new SL_MapGenerator($this);
-		$gen->createFloor();
+		return $gen->createFloor();
 	}
+	
+	###########
+	### DTO ###
+	###########
+	public function gamelistDTO()
+	{
+		return array(
+			'name' => $this->name,	
+			'config' => $this->config,
+			'players' => count($this->players),
+		);
+	}
+	
+	##########
+	### WS ###
+	##########
+	public function sendText($payload) { foreach ($this->players as $player) { $player->sendText($payload); } }
+	public function sendBinary($payload) { foreach ($this->players as $player) { $player->sendBinary($payload); } }
 	
 	#################
 	### Serialize ###

@@ -1,5 +1,9 @@
 <md-list>
-	<md-list-item>
-		<p>HI</p>
+	<md-list-item ng-repeat="game in data.games">
+		<a ng-click="joinGame(game)">{{game.name}} {{game.players}}/{{game.config.max_players}}</a>
 	</md-list-item>
 </md-list>
+
+<gwf-buttons>
+	<md-button ng-click="newGame()" aria-label="Start new game">New game</md-button>
+</gwf-buttons>

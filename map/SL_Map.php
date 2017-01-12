@@ -23,5 +23,9 @@ final class SL_Map
 // 		return $this->floor($player->z())->tile($player->x()+$x, $player->y()+$y);
 	}
 		
-	
+	public function raspawnFloor(SL_Player $player)
+	{
+		return $this->floors[0];
+	}
+
 }
