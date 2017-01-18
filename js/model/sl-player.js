@@ -73,6 +73,8 @@ function SL_Player() {
 			this.equipment[item.slot] = item;
 		}
 		this.inventory = SL_Item.itemsFromMessage(gwsMessage);
+		console.log(this);
+		alert(1);
 	};
 	
 	this.leftWeapon = function() {
@@ -89,6 +91,18 @@ function SL_Player() {
 		item.name = 'Fists';
 		return item;
 	};
+	this.hand = function() {
+		return this.equipment['hand'];
+	};
+	this.handItem = function(item) {
+		this.equipment['hand'] = item;
+		if (item) {
+			item.slot = 'hand';
+			item.setupCursor();
+			item.destroyMesh();
+		}
+	};
+
 	
 	this.equip = function(item, slot) {
 		console.log('SL_Player.equip()', item.name, slot);
@@ -100,6 +114,9 @@ function SL_Player() {
 		}
 	};
 	
+	this.unequip = function(slot) {
+		
+	};
 
 	return this;
 }

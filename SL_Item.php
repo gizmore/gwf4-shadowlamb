@@ -113,7 +113,7 @@ class SL_Item extends GDO
 	public static function loadItems(SL_Player $player)
 	{
 		$table = self::table(__CLASS__);
-		$result = $table->select('*', 'i_uid='.$player->id);
+		$result = $table->select('*', 'i_uid='.$player->getID());
 		while (false !== ($data = $table->fetch($result, GDO::ARRAY_A)))
 		{
 			$itemclass = self::itemClass($data['i_name']);

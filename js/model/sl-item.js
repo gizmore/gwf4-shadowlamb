@@ -61,7 +61,7 @@ SL_Item.getById = function(itemId) {
 /////////////
 // Factory //
 /////////////
-SL_Item.nameFromInt = function(nameInt) { return SL_CONFIG.items[nameInt-1]; };
+SL_Item.nameFromInt = function(nameInt) { return SL_CONFIG.items[nameInt]; };
 SL_Item.slotFromInt = function(slotInt) { return SL_CONFIG.slots[slotInt-1]; };
 SL_Item.slotInt = function(slot) { var ix = SL_CONFIG.slots.indexOf(slot); return ix < 0 ? 0 : ix+1; };
 SL_Item.itemsFromMessage = function(gwsMessage) {

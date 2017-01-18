@@ -101,6 +101,22 @@ sl-party sl-stat-bar {
 	height: 1.34em;
 }
 
+/** Combat buttons **/
+sl-armory {
+	position: absolute;
+	bottom: 8em;
+	right: 0px;
+	display: block;
+	width: 12em;
+	height: 12em;
+	background: #fff;
+	opacity: 0.5;
+}
+
+sl-armory > sl-item {
+	background: blue;
+}
+
 /** Inventory **/
 sl-inventory {
 	display: block;

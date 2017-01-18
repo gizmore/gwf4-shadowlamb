@@ -4,44 +4,6 @@ require_once 'SL_Global.php';
 
 final class SL_Commands extends GWS_Commands
 {
-	const ERR_UNKNOWN_GAME = 0x2001;
-	const ERR_ALREADY_IN_GAME = 0x2002;
-	const ERR_UNKNOWN_PLAYER = 0x2003;
-	const ERR_UNKNOWN_DIRECTION = 0x2004;
-	const ERR_UNKNOWN_ITEM = 0x2005;
-	const ERR_ALREADY_HAND = 0x2006;
-	const ERR_ITEM_NOT_NEAR = 0x2007;
-	const ERR_NOT_IN_HAND = 0x2008;
-	const ERR_NO_SLOT = 0x2009;
-	const ERR_SLOT_NOT_FIT= 0x200A;
-	const ERR_HAND_SYNC = 0x200B;
-	const ERR_WRONG_SLOT = 0x200C;
-	const ERR_WAY_BLOCKED = 0x2010;
-	
-	const SRV_POS = 0x2001;
-	const SRV_OWN = 0x2002;
-	const SRV_PLAYER = 0x2003;
-	const SRV_MAP = 0x2004;
-	const SRV_LVLUP = 0x2005;
-	const SRV_OUCH = 0x2010;
-	const SRV_ITEM_PICKUP = 0x2020;
-	const SRV_ITEM_DROP = 0x2021;
-	const SRV_ITEM_THROW = 0x2022;
-	const SRV_ITEM_FLY = 0x2023;
-	const SRV_ITEM_LAND = 0x2025;
-	const SRV_ITEM_INFO = 0x2024;
-	const SRV_ITEM_EQUIPPED = 0x2026;
-	const SRV_ITEM_UNEQUIPPED = 0x2027;
-	
-	const CLT_PLAYER_INFO = 0x2001;
-	const CLT_MOV = 0x2002;
-	const CLT_ITEM_INFO = 0x2003;
-	const CLT_PICKUP = 0x2010;
-	const CLT_DROP = 0x2011;
-	const CLT_THROW = 0x2012;
-	const CLT_EQUIP = 0x2014;
-	const CLT_UNEQUIP = 0x2015;
-	
 	private $sl;
 	
 	############
@@ -232,11 +194,11 @@ final class SL_Commands extends GWS_Commands
 		$floor = $player->floor;
 		if (!$player->hand())
 		{
-			return $msg->replyError(self::ERR_NOT_IN_HAND);
+			return $msg->replyError(self::ERR_NOT_IN_HAND, 'NONE');
 		}
 		if ($player->hand()->getID() != $msg->read32())
 		{
-			return $msg->replyError(self::ERR_NOT_IN_HAND);
+			return $msg->replyErrorMessage(self::ERR_NOT_IN_HAND, 'MISSID');
 		}
 		
 		$item = $player->removeHand();
@@ -287,7 +249,7 @@ final class SL_Commands extends GWS_Commands
 	}
 	
 	/**
-	 * Click equipment slot.
+	 * Equip
 	 */
 	public function xcmd_2014(GWS_Message $msg)
 	{
@@ -296,9 +258,13 @@ final class SL_Commands extends GWS_Commands
 		$hand = $player->hand();
 		
 		# Check Hand sync
-		if ((!$hand) || ($hand->getID() != $handid))
+		if (!$hand)
 		{
-			return $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'WRONG');
+			return;# $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'NONE');
+		}
+		if ($hand->getID() != $handid)
+		{
+			return $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'MISSID');
 		}
 
 		# Check valid slot
@@ -326,5 +292,80 @@ final class SL_Commands extends GWS_Commands
 		$msg->replyBinary(self::SRV_ITEM_EQUIPPED, $payload);
 	}
 	
+	/**
+	 * Unequip
+	 */
+	public function xcmd_2015(GWS_Message $msg)
+	{
+		$player = self::player($msg);
+	
+		# Check valid slot
+		$slotint = $msg->read8();
+		if (!SL_Item::validPlayerSlotInt($slotint))
+		{
+			return $msg->replyError(self::ERR_NO_SLOT);
+		}
+		
+		if ($player->hand())
+		{
+			return $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'WRONG');
+		}
+
+		# Unequip
+		$slot = SL_Item::slotEnum($slotint);
+		if ($slot === 'inventory')
+		{
+			
+		}
+		if ($item = $player->unequip($slot))
+		{
+			# Reply
+			$payload = $msg->write8($slotint);
+			$payload.= $msg->write32($item->getID());
+			$msg->replyBinary(self::SRV_ITEM_UNEQUIPPED, $payload);
+		}
+		
+	}
+	
+
+
+
+	const ERR_UNKNOWN_GAME = 0x2001;
+	const ERR_ALREADY_IN_GAME = 0x2002;
+	const ERR_UNKNOWN_PLAYER = 0x2003;
+	const ERR_UNKNOWN_DIRECTION = 0x2004;
+	const ERR_UNKNOWN_ITEM = 0x2005;
+	const ERR_ALREADY_HAND = 0x2006;
+	const ERR_ITEM_NOT_NEAR = 0x2007;
+	const ERR_NOT_IN_HAND = 0x2008;
+	const ERR_NO_SLOT = 0x2009;
+	const ERR_SLOT_NOT_FIT= 0x200A;
+	const ERR_HAND_SYNC = 0x200B;
+	const ERR_WRONG_SLOT = 0x200C;
+	const ERR_WAY_BLOCKED = 0x2010;
+	
+	const SRV_POS = 0x2001;
+	const SRV_OWN = 0x2002;
+	const SRV_PLAYER = 0x2003;
+	const SRV_MAP = 0x2004;
+	const SRV_LVLUP = 0x2005;
+	const SRV_OUCH = 0x2010;
+	const SRV_ITEM_PICKUP = 0x2020;
+	const SRV_ITEM_DROP = 0x2021;
+	const SRV_ITEM_THROW = 0x2022;
+	const SRV_ITEM_FLY = 0x2023;
+	const SRV_ITEM_LAND = 0x2025;
+	const SRV_ITEM_INFO = 0x2024;
+	const SRV_ITEM_EQUIPPED = 0x2026;
+	const SRV_ITEM_UNEQUIPPED = 0x2027;
+	
+	const CLT_PLAYER_INFO = 0x2001;
+	const CLT_MOV = 0x2002;
+	const CLT_ITEM_INFO = 0x2003;
+	const CLT_PICKUP = 0x2010;
+	const CLT_DROP = 0x2011;
+	const CLT_THROW = 0x2012;
+	const CLT_EQUIP = 0x2014;
+	const CLT_UNEQUIP = 0x2015;
 }
 

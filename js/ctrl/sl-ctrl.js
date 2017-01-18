@@ -11,7 +11,6 @@ angular.module('gwf4')
 		player: null,
 		floor: null,
 		showInventory: false,
-		hand: null,
 	};
 	
 
@@ -98,15 +97,15 @@ angular.module('gwf4')
 	
 	$scope.onClickCanvasAir = function() {
 		console.log('SLCtrl.onClickCanvasAir()');
-		if ($scope.data.hand) {
-			$scope.throwItem($scope.data.hand);
+		if (SL_PLAYER.hand()) {
+			$scope.throwItem(SL_PLAYER.hand());
 		}
 	};
 
 	$scope.onClickCanvasFloor = function() {
 		console.log('SLCtrl.onClickCanvasFloor()');
-		if ($scope.data.hand) {
-			$scope.dropItem($scope.data.hand);
+		if (SL_PLAYER.hand()) {
+			$scope.dropItem(SL_PLAYER.hand());
 		}
 		else {
 			var item = $scope.data.floor.pickupItem(SL_PLAYER.x, SL_PLAYER.y);
@@ -143,8 +142,8 @@ angular.module('gwf4')
 	$scope.onClickRightHand = function(player) { $scope.onClickHand(player, 'weapon'); };
 	$scope.onClickHand = function(player, slot) {
 		console.log('SLCtrl.onClickHand()', player, slot);
-		var hand = $scope.data.hand;
-		var gwsMessage = new GWS_Message().cmd(0x2014).write32(hand?hand.id:0).write8(SL_Item.slotInt(slot));
+		var hand = SL_PLAYER.hand();
+		var gwsMessage = new GWS_Message().cmd(hand?0x2014:0x2015).write32(hand?hand.id:0).write8(SL_Item.slotInt(slot));
 		return WebsocketSrvc.sendBinary(gwsMessage);
 	};
 	
@@ -253,16 +252,14 @@ angular.module('gwf4')
 		var player = PlayerSrvc.getOrAddPlayer(gwsMessage.read32());
 		var item = $scope.data.floor.removeItem(gwsMessage.read32());
 		if (item) {
-			$scope.data.hand = item;
-			item.setupCursor();
-			item.destroyMesh();
+			SL_PLAYER.handItem(item);
 			EffectSrvc.onPickupItem(item);
 		}
 	};
 	
 	CommandSrvc.xcmd_2021 = function(gwsMessage) {
 		console.log('SLCtrl.xcmd_2021 DROP()');
-		$scope.data.hand = null;
+		SL_PLAYER.handItem();
 		var player = PlayerSrvc.getOrAddPlayer(gwsMessage.read32());
 		var item = SL_Item.getById(gwsMessage.read32());
 		if (item) {
@@ -277,7 +274,7 @@ angular.module('gwf4')
 	
 	CommandSrvc.xcmd_2022 = function(gwsMessage) {
 		console.log('SLCtrl.xcmd_2022 THROW()');
-		$scope.data.hand = undefined;
+		SL_PLAYER.handItem();
 		var item = CommandSrvc.flyCommand(gwsMessage, true);
 		if (item) {
 			item.restoreCursor();
@@ -313,8 +310,9 @@ angular.module('gwf4')
 		console.log('SLCtrl.xcmd_2026 EQUIP()');
 		var slot = SL_Item.slotFromInt(gwsMessage.read8());
 		var newItem = SL_Item.getById(gwsMessage.read32());
-		$scope.data.hand = SL_Item.getById(gwsMessage.read32());
+		var hand = SL_Item.getById(gwsMessage.read32());
 		newItem.restoreCursor();
+		SL_PLAYER.handItem(hand);
 		SL_PLAYER.equip(newItem, slot);
 	};
 

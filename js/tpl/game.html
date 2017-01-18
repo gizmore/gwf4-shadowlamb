@@ -21,8 +21,8 @@
 	</sl-spellcast>
 
 	<sl-armory>
-		<sl-item ng-click="onAttackRight(data.player)">{{data.player.rightWeapon().icon()}}</sl-item>
-		<sl-item ng-click="onAttackLeft(data.player)">{{data.player.leftWeapon().icon()}}</sl-item>
+		<sl-item ng-click="onAttackRight(data.player)" ng-html="data.player.rightWeapon().icon()"></sl-item>
+		<sl-item ng-click="onAttackLeft(data.player)" ng-html="data.player.leftWeapon().icon()"></sl-item>
 	</sl-armory>
 
 	<sl-move>

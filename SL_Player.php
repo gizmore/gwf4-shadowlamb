@@ -235,12 +235,12 @@ class SL_Player extends GDO
 	
 	private function payloadItems()
 	{
-		$payload = GWS_Message::wr8(count($this->equipment));
+		$payload = GWS_Message::wr16(count($this->equipment));
 		foreach ($this->equipment as $item)
 		{
 			$payload .= $item->payload();
 		}
-		$payload = GWS_Message::wr8(count($this->inventory));
+		$payload .= GWS_Message::wr16(count($this->inventory));
 		foreach ($this->inventory as $item)
 		{
 			$payload .= $item->payload();
@@ -403,6 +403,7 @@ class SL_Player extends GDO
 	{
 		$this->base = array();
 		$this->adjusted = array();
+		SL_Item::loadItems($this);
 		$this->rehash();
 		$this->respawn();
 	}
@@ -609,7 +610,7 @@ class SL_Player extends GDO
 	public function slotFit(SL_Item $item, $slot)
 	{
 		printf('SL_Player::slotFit(%s, %s)'.PHP_EOL, $item->getName(), $slot);
-		if (($slot === 'weapon') || ($slot === 'shield'))
+		if (($slot === 'weapon') || ($slot === 'shield') || ($slot === 'inventory'))
 		{
 			return true;
 		}
@@ -651,8 +652,13 @@ class SL_Player extends GDO
 	
 	public function removeHand()
 	{
-		$item = $this->hand();
-		unset($this->equipment['hand']);
+		if ($item = $this->hand())
+		{
+			$item->x = $this->x;
+			$item->y = $this->y;
+			$item->z = $this->z;
+			unset($this->equipment['hand']);
+		}
 		return $item;
 	}
 	
