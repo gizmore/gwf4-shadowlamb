@@ -58,9 +58,10 @@ abstract class SL_AIScript
 	protected $target;
 	protected $difficulty;
 	
-	protected function players() { return SL_Global::$PLAYERS; }
-	protected function humans() { return SL_Global::$HUMANS; }
-	protected function bots() { return SL_Global::$BOTS; }
+	protected function game() { return $this->bot->game; }
+	protected function players() { return $this->game()->players() ; }
+	protected function humans() { return $this->game()->humans(); }
+	protected function bots() { return $this->game()->bots(); }
 
 	protected function randomBot() { return $this->randomTarget($this->bots()); }
 	protected function randomHuman() { return $this->randomTarget($this->humans()); }

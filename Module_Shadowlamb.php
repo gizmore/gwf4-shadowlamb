@@ -1,12 +1,17 @@
 <?php
 require_once 'magic/SL_Spell.php';
 require_once 'magic/SL_Potion.php';
+require_once 'SL_Obstacle.php';
 require_once 'SL_Item.php';
 require_once 'SL_Levelup.php';
 require_once 'SL_Race.php';
 require_once 'SL_Player.php';
 require_once 'SL_Bot.php';
 require_once 'SL_PlayerFactory.php';
+require_once 'fx/SL_Effect.php';
+require_once 'fx/SL_Throw.php';
+require_once 'combat/SL_Attack.php';
+require_once 'combat/SL_ThrowAttack.php';
 require_once 'map/SL_Games.php';
 
 final class Module_Shadowlamb extends GWF_Module
@@ -22,7 +27,7 @@ final class Module_Shadowlamb extends GWF_Module
 	public function getVersion() { return 4.00; }
 	public function getDefaultPriority() { return 64; }
 	public function getDefaultAutoLoad() { return true; }
-	public function getClasses() { return array('SL_Player'); }
+	public function getClasses() { return array('SL_Player', 'SL_Item'); }
 	public function onLoadLanguage() { return $this->loadLanguage('lang/shadowlamb'); }
 	public function onInstall($dropTable) { require_once 'SL_Install.php'; return SL_Install::onInstall($this, $dropTable); }
 
@@ -37,7 +42,7 @@ final class Module_Shadowlamb extends GWF_Module
 	public function cfgBots() { return $this->getModuleVarBool('tgc_bots', '1'); }
 	public function cfgMaxBots() { return $this->getModuleVarInt('tgc_max_bots', '6'); }
 	
-	public function cfgMaxFoodclanBots() { return $this->getModuleVarInt('tgc_max_foodclan_bots', '1'); }
+	public function cfgMaxFoodclanBots() { return $this->getModuleVarInt('tgc_max_foodclan_bots', '2'); }
 	public function cfgMaxAssassinBots() { return $this->getModuleVarInt('tgc_max_assassin_bots', '1'); }
 	public function cfgMaxNimdaBots() { return $this->getModuleVarInt('tgc_max_nimda_bots', '0'); }
 	public function cfgMaxRobberBots() { return $this->getModuleVarInt('tgc_max_loser_bots', '0'); }
@@ -96,8 +101,13 @@ final class Module_Shadowlamb extends GWF_Module
 		$races = json_encode(SL_Race::races());
 		$colors = json_encode(SL_Player::$COLORS);
 		$elements = json_encode(SL_Player::$ELEMENTS);
-		return sprintf('window.SL_CONFIG = { levels: %s, runes: %s, runecost: %s, version: %0.2f, races: %s, colors: %s, elements: %s };',
-				$levels, $runes, $runecost, $version, $races, $colors, $elements);
+		$combat = json_encode(SL_Player::$COMBAT);
+		$attributes = json_encode(SL_Player::$ATTRIBUTES);
+		$skills = json_encode(SL_Player::$SKILLS);
+		$slots = json_encode(SL_Item::$SLOTS);
+		$items = json_encode(SL_Item::itemNames());
+		return sprintf('window.SL_CONFIG = { levels: %s, runes: %s, runecost: %s, version: %0.2f, races: %s, colors: %s, elements: %s, combat: %s, attributes: %s, skills: %s, slots: %s, items: %s };',
+				$levels, $runes, $runecost, $version, $races, $colors, $elements, $combat, $attributes, $skills, $slots, $items);
 	}
 	
 	private function includeWebAssets()
@@ -113,28 +123,32 @@ final class Module_Shadowlamb extends GWF_Module
 	
 		# CSS
 		$this->addCSS('shadowlamb.css');
+		# Babylon WebGL
+		$this->addJavascript('lib/babylon.custom.js');
+		# jQuery
+		$this->addJavascript('jq/px_to_em.jquery.js');
+		# Conf
+		$this->addJavascript('conf/sl-conf.js');
 		# Filters
 // 		$this->addJavascript('filters/gwf-date-filter.js');
 		# Directives
-// 		$this->addJavascript('directives/tgc-stat-bar.js');
-		# Conf
-		$this->addJavascript('conf/sl-conf.js');
+		$this->addJavascript('directives/sl-stat-bar.js');
 		# Model
 		$this->addJavascript('model/sl-player.js');
 		$this->addJavascript('model/sl-item.js');
+		$this->addJavascript('model/sl-floor.js');
 		$this->addJavascript('model/sl-map.js');
 		# Ctrl
 		$this->addJavascript('ctrl/sl-ctrl.js');
+		$this->addJavascript('ctrl/sl-spell-ctrl.js');
 		$this->addJavascript('ctrl/sl-gamelist-ctrl.js');
 		$this->addJavascript('ctrl/sl-sidebar-ctrl.js');
-// 		# Srvc
-// 		$this->addJavascript('srvc/tgc-chat-service.js');
-// 		$this->addJavascript('srvc/tgc-const-service.js');
-// 		$this->addJavascript('srvc/tgc-command-service.js');
+		# Srvc
+		$this->addJavascript('srvc/sl-babylon-srvc.js');
 		$this->addJavascript('srvc/sl-player-srvc.js');
-// 		$this->addJavascript('srvc/tgc-effect-service.js');
-// 		# Dialog
-// 		$this->addJavascript('dlg/tgc-area-dialog.js');
+		$this->addJavascript('srvc/sl-effect-srvc.js');
+		# Dialog
+// 		$this->addJavascript('dlg/sl-inventory-dlg.js');
 // 		$this->addJavascript('dlg/tgc-levelup-dialog.js');
 // 		$this->addJavascript('dlg/tgc-player-dialog.js');
 // 		$this->addJavascript('dlg/tgc-spell-dialog.js');

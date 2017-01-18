@@ -9,9 +9,16 @@ final class SL_Game
 	private $owner;
 	private $map;
 	private $config;
-	private $players, $bots, $humans, $items;
+	private $ai;
+	private $handler;
+	private $players, $bots, $humans;
+	private $items, $effects;
 	
 	public function map() { return $this->map; }
+	public function floor($z) { return $this->map->floor($z); }
+	public function handler() { return $this->handler; }
+	public function bots() { return $this->bots; }
+	public function humans() { return $this->humans; }
 	public function config() { return $this->config; }
 	public function players() { return $this->players; }
 	public function type() { return $this->config['type']; }
@@ -29,20 +36,28 @@ final class SL_Game
 	{
 		return array(
 			'type' => self::STATIC,
-			'width' => 128, 'height' => 64,
+			'width' => 16, 'height' => 16,
 			'max_players' => 32,
 		);
 	}
 	
-	public function __construct(array $config)
+	public function __construct(array $config, $handler)
 	{
 		$this->name = '';
+		$this->handler = $handler;
 		$this->config = array_merge($this->defaultConfig(), $config);
 		$this->players = array();
 		$this->bots = array();
 		$this->humans = array();
 		$this->items = array();
+		$this->effects = array();
 		$this->map = new SL_Map($this);
+		$this->ai = new SL_AI();
+	}
+	
+	public function init()
+	{
+		$this->ai->init($this);
 	}
 
 	public function canJoin(SL_Player $player)
@@ -89,6 +104,36 @@ final class SL_Game
 		return $gen->createFloor();
 	}
 	
+	###############
+	### Effects ###
+	###############
+	public function addEffect(SL_Effect $effect)
+	{
+		$this->effects[] = $effect;
+	}
+
+	############
+	### Tick ###
+	############
+	public function tick($tick)
+	{
+		$this->ai->tick($tick);
+		
+		foreach ($this->effects as $i => $effect)
+		{
+			$effect->tick($this, $tick);
+			if ($effect->finished($this, $tick))
+			{
+				unset($this->effects[$i]);
+			}
+		}
+		
+		foreach ($this->players as $player)
+		{
+			$player->tick($tick);
+		}
+	}
+	
 	###########
 	### DTO ###
 	###########
@@ -119,8 +164,6 @@ final class SL_Game
 		{
 			return 'ERR_CREATE_DIR';
 		}
-		
-		
 	}
 	
 	public function deserialize()

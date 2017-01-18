@@ -5,7 +5,7 @@ final class SL_Map
 	
 	public function floors() { return $this->floors; }
 	public function numFloors() { return count($this->floors); }
-	public function floor($z) { return $this->floors[$z]; }
+	public function floor($z) { return $this->floors[$z-1]; }
 	
 	public function __construct(SL_Game $game)
 	{

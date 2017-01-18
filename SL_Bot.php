@@ -11,10 +11,10 @@ final class SL_Bot extends SL_Player
 	###############
 	### Getters ###
 	###############
+	public function handler() { return $this->game->handler(); } 
 	public function getID() { return $this->getVar('p_uid'); }
 	public function getType() { return $this->getVar('p_type'); }
 	public function target() { return $this->script->target(); }
-	public function handler() { return SL_AI::instance()->handler(); }
 	public function getScript() { return $this->script; }
 	public function lastCommand() { return $this->command; }
 	public function killXP(SL_Player $killer) { return 1 + $this->playerLevel(); }
@@ -82,14 +82,13 @@ final class SL_Bot extends SL_Player
 	###################
 	### Move Helper ###
 	###################
-	public function aiMoveNear($player, $instant=false)
+	public function aiMoveNear($player)
 	{
-// 		if ($player && $player->hasPosition())
-// 		{
-// 			$lat = GWF_Random::Rand(0, 1000) / 1000 + $player->lat();
-// 			$lng = GWF_Random::Rand(0, 1000) / 1000 + $player->lng();
-// 			$this->aiMove($lat, $lng, $instant);
-// 		}
+		$dirs = array('N', 'E', 'S', 'W');
+		if ($player)
+		{
+			$this->aiMove($dirs[array_rand($dirs)]);
+		}
 	}
 	
 	###############
@@ -111,31 +110,22 @@ final class SL_Bot extends SL_Player
 	#################
 	### Commands ####
 	#################
-	public function aiMove($lat, $lng, $instant=false)
+	public function aiMove($direction)
 	{
-		$this->setPosition($lat, $lng);
-		$payload = array('lat' => $lat, 'lng' => $lng);
-		if ($instant)
-		{
-			$this->tickExecute('tgcPos', json_encode($payload));
-		}
-		else
-		{
-			$this->aiJSONCommand('tgcPos', $payload);
-		}
+		$this->move($direction);
 	}
 	
 	public function aiFight($player, $command='tgcFight')
 	{
 		if ($player)
 		{
-			$this->aiCommand($command, $player->getName());
+// 			$this->aiCommand($command, $player->getName());
 		}
 	}
 	
 	public function aiAttack($player)
 	{
-		$this->aiFight($player, 'tgcAttack');
+// 		$this->aiFight($player, 'tgcAttack');
 	}
 	
 	public function aiCast($player, $spell)

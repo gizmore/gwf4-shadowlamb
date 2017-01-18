@@ -38,8 +38,8 @@ final class SL_Levelup
 		$gain = self::onLevelupDices($player, $skill, $levels);
 		$player->increaseVars($gain);
 		$player->rehash();
-		$player->giveHP($gain['p_max_hp']);
-		$player->giveMP($gain['p_max_mp']);
+		$player->giveHP($gain['p_base_hp']);
+		$player->giveMP($gain['p_base_mp']);
 	}
 	
 	#############
@@ -96,8 +96,8 @@ final class SL_Levelup
 				break;
 		}
 		return array(
-			'p_max_hp' => $gain_hp,
-			'p_max_mp' => $gain_mp,
+			'p_base_hp' => $gain_hp,
+			'p_base_mp' => $gain_mp,
 			'p_strength' => $gain_str,
 			'p_dexterity' => $gain_dex,
 			'p_wisdom' => $gain_wis,

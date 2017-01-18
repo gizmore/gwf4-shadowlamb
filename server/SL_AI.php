@@ -3,9 +3,7 @@ require_once 'SL_AIScript.php';
 
 final class SL_AI
 {
-	private static $INSTANCE;
-	
-	private $handler;
+	private $game;
 	private $spawncounter = 0;
 	private $lastSpawn = null;
 	private $scripts;
@@ -13,21 +11,20 @@ final class SL_AI
 	###############
 	### Getters ###
 	###############
-	public static function instance() { return self::$INSTANCE; }
 	public function handler() { return $this->handler; }
-	public function tgc() { return Module_Tamagochi::instance(); }
-	public function bots() { return SL_Global::$BOTS; }
-// 	public function scripts() { return $this->scripts; }
+	public function tgc() { return Module_Shadowlamb::instance(); }
+	public function bots() { return $this->game->bots(); }
+	public function humans() { return $this->game->humans(); }
+	public function players() { return $this->game->players(); }
 	public function maxBots() { return $this->tgc()->cfgMaxBots(); }
 	public function allowBots() { return $this->tgc()->cfgBots(); }
 	
 	############
 	### Load ###
 	############
-	public function init($handler)
+	public function init($game)
 	{
-		self::$INSTANCE = $this;
-		$this->handler = $handler;
+		$this->game = $game;
 		$this->spawncounter = 0;
 		$this->scripts = SL_AIScript::init();
 		if ($this->allowBots())
@@ -69,6 +66,7 @@ final class SL_AI
 	private function addBot(SL_Bot $bot)
 	{
 		SL_Global::addPlayer($bot);
+		$this->game->join($bot);
 	}
 	
 	############
@@ -76,11 +74,6 @@ final class SL_AI
 	############
 	public function tick($tick)
 	{
-		foreach (SL_Global::$PLAYERS as $player)
-		{
-			$player instanceof SL_Player;
-			$player->tick($tick);
-		}
 		if ($this->allowBots())
 		{
 			$this->spawnBots($tick);
@@ -94,7 +87,7 @@ final class SL_AI
 	private function spawnBots($tick)
 	{
 		$chances = array();
-		$maxTotal = min(ceil(count(SL_Global::$HUMANS) * 1.5), $this->tgc()->cfgMaxBots());
+		$maxTotal = min(ceil(count($this->humans()) * 1.5), $this->tgc()->cfgMaxBots());
 		$haveTotal = count($this->bots());
 		if ($haveTotal < $maxTotal)
 		{

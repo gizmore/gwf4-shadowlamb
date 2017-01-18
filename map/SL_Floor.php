@@ -1,7 +1,7 @@
 <?php
 final class SL_Floor
 {
-	private $game, $width, $number, $tiles;
+	private $game, $width, $number, $tiles, $items;
 	
 	public function tiles() { return $this->tiles; }
 	public function height() { return $this->game->height(); }
@@ -30,12 +30,30 @@ final class SL_Floor
 		$this->width = $game->width();
 		$this->number = $game->numFloors() + 1;
 		$this->tiles = new SplFixedArray($game->numTiles());
+		$this->items = array();
 	}
 	
 	public function canMove($x, $y)
 	{
-		return !$this->tileIs($x, $y, SL_Tile::WALL);
+		return ((!$this->tileIs($x, $y, SL_Tile::WALL)) &&
+				(!$this->playerAt($x, $y)));
 	}
+
+	#############
+	### Items ###
+	#############
+	public function getItem($itemId) { return isset($this->items[$itemId]) ? $this->items[$itemId] : null; }
+	public function removeItem(SL_Item $item) { unset($this->items[$item->getID()]); }
+	public function addItem(SL_Item $item) { $this->addItemAt($item, $item->x, $item->y); }
+	public function addItemAtRandom(SL_Item $item) { $index = $this->randNonWallIndex(); $this->addItemAt($item, $this->x($index), $this->y($index)); }
+	public function addItemAt(SL_Item $item, $x, $y)
+	{
+		$item->x = $x;
+		$item->y = $y;
+		$item->z = $this->number;
+		$this->items[$item->getID()] = $item;
+	}
+	
 	
 	#############
 	### Debug ###
@@ -57,14 +75,11 @@ final class SL_Floor
 	###############
 	### Message ###
 	###############
-// 	private function minswap(&$a, &$b) { if ($a > $b) { $t = $a; $a = $b; $b = $t; } }
 	public function payloadMap($x1, $y1, $x2, $y2)
 	{
 		$w = $this->width; $h = $this->height();
 		$x1 = Common::clamp($x1, 0, $w-1); $x2 = Common::clamp($x2, 0, $w-1);
 		$y1 = Common::clamp($y1, 0, $h-1); $y2 = Common::clamp($y2, 0, $h-1);
-// 		$this->minswap($x1, $x2);
-// 		$this->minswap($y1, $y2);
 		$payload = GWS_Message::wr16(SL_Commands::SRV_MAP);
 		$payload.= GWS_Message::wr8($x1).GWS_Message::wr8($y1);
 		$payload.= GWS_Message::wr8($x2).GWS_Message::wr8($y2);
@@ -76,7 +91,46 @@ final class SL_Floor
 				$payload .= GWS_Message::wr8($this->tile($x, $y));
 			}
 		}
+		
+		$payload .= $this->payloadItems($x1, $y1, $x2, $y2);
+		
 		return $payload;
+	}
+	
+	private function itemsInRect($x1, $y1, $x2, $y2)
+	{
+		$result = array();
+		foreach ($this->items as $item)
+		{
+			if ( ($item->x >= $x1) && ($item->x <= $x2) && ($item->y >= $y1) && ($item->y <= $y2) )
+			{
+				$result[] = $item;
+			}
+		}
+		return $result;
+	}
+			
+	private function payloadItems($x1, $y1, $x2, $y2)
+	{
+		$items = $this->itemsInRect($x1, $y1, $x2, $y2);
+		$payload = GWS_Message::wr16(count($items));
+		foreach ($items as $item)
+		{
+			$payload .= $item->payload();
+		}
+		return $payload;
+	}
+	
+	public function playerAt($x, $y)
+	{
+		foreach ($this->game->players() as $player)
+		{
+			if (($player->x === $x) && ($player->y === $y))
+			{
+				return $player;
+			}
+		}
+		return null;
 	}
 	
 }

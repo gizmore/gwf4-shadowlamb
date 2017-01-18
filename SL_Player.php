@@ -17,12 +17,14 @@ class SL_Player extends GDO
 	public static $SKILLS = array('fighter', 'ninja', 'priest', 'wizard');
 	public static $XP = array('fighter_xp', 'ninja_xp', 'priest_xp', 'wizard_xp');
 	public static $ATTRIBUTES = array('strength', 'dexterity', 'wisdom', 'intelligence');
+	public static $COMBAT = array('attack', 'defense', 'damage', 'armor');
+	public static function itemFields() { return array_merge(self::$COMBAT, self::$ATTRIBUTES, self::$SKILLS); }
 	public static function allFields() { return array_merge(self::$XP, self::$SKILLS, self::$STATS, self::$ATTRIBUTES); }
 	
-	public static function colorsEnum() { return array_merge(array('none', self::$COLORS)); }
-	public static function elementsEnum() { return array_merge(array('none', self::$ELEMENTS)); }
-	public static function modesEnum() { return array_merge(array('none', self::$MODES)); }
-	public static function skillsEnum() { return array_merge(array('none', self::$SKILLS)); }
+	public static function colorsEnum() { return array_merge(array('none'), self::$COLORS); }
+	public static function elementsEnum() { return array_merge(array('none'), self::$ELEMENTS); }
+	public static function modesEnum() { return array_merge(array('none'), self::$MODES); }
+	public static function skillsEnum() { return array_merge(array('none'), self::$SKILLS); }
 	
 	public function raceInt() { return self::enumToInt($this->getRace(), SL_Race::races()); }
 	public function genderInt() { return self::enumToInt($this->getGender(), self::$GENDERS); }
@@ -35,13 +37,19 @@ class SL_Player extends GDO
 	private $water = 100, $tired = 0, $food = 100, $alc = 0, $frightened = 0, $endurance = 0;
 
 	private $user = null, $baseLevel = 1, $adjustedLevel = 1;
-
 	
-	public $game, $x, $y, $z;
+	public static $DIR_X = array('N' => 0, 'S' => 0, 'E' => 1, 'W' => -1);
+	public static $DIR_Y = array('N' => -1, 'S' => 1, 'E' => 0, 'W' => 0);
+
+	public $x, $y, $z;
+
+	public $game, $floor;
 
 	private $base = array();
 	private $effects = array();
 	private $adjusted = array();
+	private $equipment = array();
+	private $inventory = array();
 
 	public function getClassName() { return __CLASS__; }
 	public function getTableName() { return GWF_TABLE_PREFIX.'sl_players'; }
@@ -103,14 +111,16 @@ class SL_Player extends GDO
 	public function setGame($game)
 	{
 		$this->game = $game;
+		$this->floor = null;
 		$this->x = $this->y = $this->z = 0;
 	}
 	
 	public function setToFloorIndex(SL_Floor $floor, $index)
 	{
+		$this->floor = $floor;
 		$this->x = $floor->x($index);
 		$this->y = $floor->y($index);
-		$this->z = $floor;
+		$this->z = $floor->z();
 	}
 	
 	public function requestFirstMap()
@@ -119,15 +129,13 @@ class SL_Player extends GDO
 		$this->requestMap($x-$r, $y-$r, $x+$r, $y+$r);
 	}
 	
-	private static $DIR_X = array('N' => 0, 'S' => 0, 'E' => 1, 'W' => -1);
-	private static $DIR_Y = array('N' => -1, 'S' => 1, 'E' => 0, 'W' => 0);
 	public function move($direction)
 	{
 		$xoff = self::$DIR_X[$direction];
 		$yoff = self::$DIR_Y[$direction];
-		if (!$this->z->canMove($this->x + $xoff, $this->y + $yoff))
+		if (!$this->floor->canMove($this->x + $xoff, $this->y + $yoff))
 		{
-			return $this->sendError(SL_Commands::ERR_WAY_BLOCKED);
+			return $this->moveIntoWall();
 		}
 		$this->x += $xoff;
 		$this->y += $yoff;
@@ -139,22 +147,33 @@ class SL_Player extends GDO
 		$x = $this->x; $y = $this->y; $r = self::VIEW_LENGTH;
 		switch ($direction)
 		{
-			case 'N': case 'S': $this->requestMap($x-$r, $y, $x+$r, $y); break;
-			case 'E': case 'W': $this->requestMap($x, $y-$r, $x, $y+$r); break;
+			case 'N': $this->requestMap($x-$r, $y-$r, $x+$r, $y-$r); break;
+			case 'S': $this->requestMap($x-$r, $y+$r, $x+$r, $y+$r); break;
+			case 'E': $this->requestMap($x+$r, $y-$r, $x+$r, $y+$r); break;
+			case 'W': $this->requestMap($x-$r, $y-$r, $x-$r, $y+$r); break;
 		}
 		$this->game->sendBinary($this->payloadPos());
 	}
 	
+	private function moveIntoWall()
+	{
+		$this->giveHP(-1);
+		$payload = GWS_Message::wr16(SL_Commands::SRV_OUCH);
+		$payload.= GWS_Message::wr16($this->hp()).GWS_Message::wr16($this->maxHP());
+		$this->sendBinary($payload);
+	}
+	
 	private function requestMap($x1, $y1, $x2, $y2)
 	{
-		$this->sendBinary($this->z->payloadMap($x1, $y1, $x2, $y2));
+		$this->sendBinary($this->floor->payloadMap($x1, $y1, $x2, $y2));
 	}
 	
 	################
 	### Messages ###
 	################
 	public function conn() { return GWS_Global::getConnectionInterface($this); }
-	public function sendError($code) { $this->sendBinary(GWS_Message::wr16(0x0000).GWS_Message::wr16($code)); }
+	public function sendError($code) { $this->sendErrorMessage($code, ''); }
+	public function sendErrorMessage($code, $message) { $this->sendBinary(GWS_Message::wr16(0x0000).GWS_Message::wr16($code).GWS_Message::wrS($message)); }
 	public function sendText($payload) { printf("%s << %s\n", $this->displayName(), $payload); $this->conn()->send($payload); }
 	public function sendBinary($payload) { printf("%s << BIN\n", $this->displayName()); GWS_ServerUtil::hexdump($payload); $this->conn()->sendBinary($payload); }
 	###############
@@ -165,31 +184,31 @@ class SL_Player extends GDO
 		return
 			GWS_Message::wr16(SL_Commands::SRV_POS).
 			GWS_Message::wr32($this->getID()).
-			GWS_Message::wr8($this->x).GWS_Message::wr8($this->y).GWS_Message::wr8($this->z->z());
+			GWS_Message::wr8($this->x).GWS_Message::wr8($this->y).GWS_Message::wr8($this->z);
 	}
 	
 	public function payloadOwn()
 	{
-		return GWS_Message::wr16(SL_Commands::SRV_OWN).$this->payloadBase().$this->payloadExtended().$this->payloadItems().$this->payloadEffects();
+		return $this->payloadBase().$this->payloadExtended().$this->payloadItems().$this->payloadEffects();
 	}
 	
 	public function payloadOther()
 	{
-		return GWS_Message::wr16(SL_Commands::SRV_PLAYER).$this->payloadBase();
+		return $this->payloadBase();
 	}
 	
 	private function payloadBase()
 	{
-		$payload  = GWS_Message::wr32($this->getID()).GWS_Message::wrS($this->displayName());
+		$payload  = GWS_Message::wr32($this->getID());
+		$payload .= GWS_Message::wrS($this->displayName());
 		$payload .= GWS_Message::wr8(self::raceInt());
 		$payload .= GWS_Message::wr8(self::genderInt());
 		$payload .= GWS_Message::wr8(self::elementInt());
 		$payload .= GWS_Message::wr8(self::colorInt());
 		$payload .= GWS_Message::wr8(self::skillInt());
-		
 		$payload .= GWS_Message::wr16($this->baseLevel).GWS_Message::wr16($this->adjustedLevel);
-		$payload .= GWS_Message::wr16($this->hp()).GWS_Message::wr16($this->mp());
-		$payload .= GWS_Message::wr16($this->maxHP()).GWS_Message::wr16($this->maxMP());
+		$payload .= GWS_Message::wr16($this->hp()).GWS_Message::wr16($this->maxHP());
+		$payload .= GWS_Message::wr16($this->mp()).GWS_Message::wr16($this->maxMP());
 
 		foreach (self::$ATTRIBUTES as $field)
 		{
@@ -214,12 +233,22 @@ class SL_Player extends GDO
 		return $payload;
 	}
 	
-	private function payloadEffects()
+	private function payloadItems()
 	{
-		return '';
+		$payload = GWS_Message::wr8(count($this->equipment));
+		foreach ($this->equipment as $item)
+		{
+			$payload .= $item->payload();
+		}
+		$payload = GWS_Message::wr8(count($this->inventory));
+		foreach ($this->inventory as $item)
+		{
+			$payload .= $item->payload();
+		}
+		return $payload;
 	}
 	
-	private function payloadItems()
+	private function payloadEffects()
 	{
 		return '';
 	}
@@ -387,8 +416,17 @@ class SL_Player extends GDO
 		$this->rehashStats();
 		$this->rehashFeels();
 		$this->rehashLevel();
+		$this->rehashEquipment();
 	}
 
+	private function rehashEquipment()
+	{
+		foreach ($this->equipment as $slot => $item)
+		{
+// 			$item->adjust($this);
+		}
+	}
+	
 	private function rehashLevel()
 	{
 		$this->baseLevel = 1;
@@ -402,6 +440,10 @@ class SL_Player extends GDO
 
 	private function rehashBase()
 	{
+		foreach (self::$COMBAT as $field)
+		{
+			$this->base[$field] = $this->adjusted[$field] = 0;
+		}
 		foreach ($this->allFields() as $field)
 		{
 			$this->base[$field] = (int)$this->getVar('p_'.$field);
@@ -475,7 +517,7 @@ class SL_Player extends GDO
 	###############
 	public function giveXP($skill, $xp, $announce=true)
 	{
-		$xp = (int)$xp;
+		$xp = ceil($xp);
 		if ($xp > 0)
 		{
 			$this->increase('p_'.$skill.'_xp', $xp);
@@ -484,8 +526,9 @@ class SL_Player extends GDO
 				SL_Levelup::onLevelup($this, $skill, $levelDiff);
 				if ($announce)
 				{
-					$payload = json_encode($this->ownPlayerDTO());
-					$this->sendCommand('SL_LVLUP', $payload);
+					$payload = GWS_Message::wr16(SL_Commands::SRV_LVLUP);
+					$payload.= $this->payloadOwn();
+					$this->sendBinary($payload);
 				}
 			}
 		}
@@ -549,7 +592,97 @@ class SL_Player extends GDO
 		$payload = $this->ownPlayerDTO();
 		$this->sendCommand('SL_GAMEOVER', json_encode($payload));
 	}
+	
+	#############
+	### Items ###
+	#############
+	public function hand()
+	{
+		return $this->equipment('hand');
+	}
+	
+	public function equipment($slot)
+	{
+		return isset($this->equipment[$slot]) ? $this->equipment[$slot] : null;
+	}
+	
+	public function slotFit(SL_Item $item, $slot)
+	{
+		printf('SL_Player::slotFit(%s, %s)'.PHP_EOL, $item->getName(), $slot);
+		if (($slot === 'weapon') || ($slot === 'shield'))
+		{
+			return true;
+		}
+		else
+		{
+			return $item->equipmentSlot() === $slot;
+		}
+	}
+	
+	public function equip($slot)
+	{
+		$old = $this->equipment($slot);
+		$hand = $this->hand();
+		$this->equipment[$slot] = $hand;
+		$hand->setPlayer($this, $slot);
+		$this->handItem($old);
+		return $hand; # formerly
+	}
+	
+	public function unequip($slot)
+	{
+		$old = $this->equipment($slot);
+		$this->handItem($old);
+		return $old;
+	}
+	
+	public function handItem($item)
+	{
+		if ($item)
+		{
+			$this->equipment['hand'] = $item;
+			$item->setPlayer($this, 'hand');
+		}
+		else
+		{
+			unset($this->equipment['hand']);
+		}
+	}
+	
+	public function removeHand()
+	{
+		$item = $this->hand();
+		unset($this->equipment['hand']);
+		return $item;
+	}
+	
+	public function giveItem(SL_Item $item)
+	{
+		if ($item->saveVars(array(
+			'i_uid' => $this->getUserID(),
+			'i_slot' => 'inventory',
+		)))
+		{
+			$this->inventory[$item->getID()] = $item;
+		}
+	}
 
+	public function loadedItem(SL_Item $item)
+	{
+		if ($item->getSlot() === 'inventory')
+		{
+			$this->inventory[$item->getID()] = $item;
+		}
+		else
+		{
+			$this->equipment[$item->getSlot()] = $item;
+		}
+	}
+	
+	public function throw($direction)
+	{
+		$this->game->addEffect(new SL_Throw($this, $this->removeHand(), $direction));
+	}
 
 	############
 	### Tick ###

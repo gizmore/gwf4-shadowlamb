@@ -10,7 +10,7 @@ final class SL_Global
 	
 	public static $GAMES;
 	
-	public static function init($seed)
+	public static function init($seed, $handler)
 	{
 		self::$TICK = 0;
 		self::$INITIAL_SEED = self::$SEED = $seed;
@@ -19,7 +19,7 @@ final class SL_Global
 		{
 			self::$TYPED_BOTS[$type] = array();
 		}
-		self::$GAMES = new SL_Games();
+		self::$GAMES = new SL_Games($handler);
 	}
 
 	############
@@ -27,8 +27,9 @@ final class SL_Global
 	############
 	public static function tick()
 	{
+		self::$TICK++;
 		self::$AVG_BASE = self::$AVG_ADJUST = array();
-		return self::$TICK++;
+		self::$GAMES->tick(self::$TICK);
 	}
 	
 	public static function rand($min, $max)

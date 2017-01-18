@@ -1,58 +1,40 @@
-
-/** FULLSCREEN **/
-HTML, BODY, #TGCMAP {
-	width: 100%;
-}
-#TGCMAPDIV, #TGCMAP {
-	width:  100%;
-	height: 100%;
-	min-height: 100%;
+#game-canvas {
+	display: block;
+	position: absolute;
+	padding-top: 4em;
+	top: 0px; left: 0px;
+	width: 100%; height: 100%;
 }
 
-#TGCMAPDIV {
-	position: relative;
+
+
+/** Movement box **/
+sl-move {
+	display: block;
+	position: absolute;
+	bottom: 0px;
+	right: 0px;
+	background: #eee;
+	opacity: 0.65;
+	width: 12em;
+	height: 8em;
 }
 
-/** Action Bar **/
-tgc-game-action-bar {
+sl-move a {
+	display: block;
+	float: left;
+	width: 3.5em;
+	height: 3.5em;
+	border: 2px solid #fff;
 	text-align: center;
-}
-tgc-game-action-bar button.md-button {
-	background: #ccc;
-	color: black;
-}
-tgc-game-action-bar-shadow {
-	opacity: 0.6;
-	background: #000;
-	border-top: 3px solid #444;
-}
-tgc-game-action-bar, tgc-game-action-bar-shadow {
-	display: block;
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	width: 100%;
-	height: 2.5em;
+	font-size: 18px;
+	line-height: 56px;
+	vertical-align: middle;
 }
 
-/** **/
-#tgc-chat-input input {
-	padding-left: 7.5em;
-	padding-right: 7.5em;
-	color: #333;
-}
-
-/** **/
-#VERSION {
-	display: block;
-	position: absolute;
-	bottom: 1em;
-	right: 3em;
-	opacity: 0.4137;
-}
 
 /** Stats Bar **/
-tgc-stat-bar {
+sl-stat-bar {
 	width: 100%;
 	min-width: 4em;
 	border: 1px solid black;
@@ -60,13 +42,13 @@ tgc-stat-bar {
 	position: relative;
 	height: 1.5em;
 }
-tgc-stat-bar label {
+sl-stat-bar label {
 	height: 1.5em;
 	text-align: left;
 	padding-left: 0.5em;
 	vertical-align: middle;
 }
-tgc-stat-bar left {
+sl-stat-bar left {
 	display: block;
 	position: absolute;
 	left: 0;
@@ -74,7 +56,7 @@ tgc-stat-bar left {
 	height: 100%;
 	width: 100%;
 }
-tgc-stat-bar right {
+sl-stat-bar right {
 	display: block;
 	position: absolute;
 	height: 100%;
@@ -90,23 +72,59 @@ tgc-stat-bar right {
 .wisdom-bar, .priest-bar { background: blue; color: black; }
 .intelligence-bar, .wizard-bar { background: green; color: black; }
 
-/** **/
-md-dialog-content > p {
-	padding: 2em 1.5em 0;
+
+/** Party bar **/
+sl-party {
+	position: absolute;
+	display: block;
+	top: 4em;
+	left: 0;
+	height: 4em;
+	width: 100%;
+	background: #fff;
+	opacity: 0.5;
+}
+sl-party:hover {
+	opacity: 0.9;
+}
+sl-party sl-stat-bar {
+	width: 4em;
+}
+sl-party > * {
+	float: left;
+}
+sl-avatar img {
+	height: 4em;
+	width: 4em;
+}
+sl-party sl-stat-bar {
+	height: 1.34em;
 }
 
-/** Spell Dialog **/
-.spell-row {
+/** Inventory **/
+sl-inventory {
+	display: block;
+	position: absolute;
+	top: 4em;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	padding: 4em;
 }
-.spell-row ol {
-	list-style: none;
+
+sl-inventory > inner {
+	display: block;
+	width: 100%;
+	height: 100%;
+	padding: 4em;
+	background: #222;
+	opacity: 0.5;
+	border: 4px solid #fff;
 }
-.spell-row li {
-	display: inline-block;
-}
-.selected-rune  {
-	background: red!important;
-}
-.spell-row li button {
-	background: gray;
+
+sl-item {
+	display: block;
+	width: 4em;
+	height: 4em;
+	border: 2px solid #612;
 }

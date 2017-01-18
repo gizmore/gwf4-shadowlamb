@@ -39,9 +39,21 @@ final class SL_MapGenerator
 		$this->randomizedPrimeWalls();
 		$this->cleanupGenFlags();
 		
+		$this->generateItems();
+		
 		$this->game->map()->addFloor($this->floor);
 		$this->floor->debugWalls();
 		return $this->floor;
+	}
+	
+	private function generateItems()
+	{
+		$max = (int) (($this->width()+$this->height()) / 2);
+		for ($i = 0; $i < $max; $i++)
+		{
+			$item = SL_Item::factoryRandom();
+			$this->floor->addItemAtRandom($item);
+		}
 	}
 	
 	#############

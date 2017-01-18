@@ -1,8 +1,64 @@
-<sl-map>
-</sl-map>
-<sl-movement>
-	<a ng-click="move('N')">N</a>
-	<a ng-click="move('S')">S</a>
-	<a ng-click="move('E')">E</a>
-	<a ng-click="move('W')">W</a>
-</sl-movement>
+<canvas id="game-canvas" ng-keydown="onKeyDown($event)" ng-click="onClickCanvas($event)"></canvas>
+ 
+<sl-party>
+	<sl-avatar ng-click="onClickAvatar(data.player)"><img ng-src="data.player.avatarPath()" /></sl-avatar>
+	<sl-stats>
+		<sl-stat-bar class="hp-bar" ng-value="data.player.hp" ng-max="data.player.max_hp" label=""></sl-stat-bar>
+		<sl-stat-bar class="mp-bar" ng-value="data.player.mp" ng-max="data.player.max_mp" label=""></sl-stat-bar>
+		<sl-stat-bar class="endurance-bar" ng-value="data.player.endurance" ng-max="100" label=""></sl-stat-bar>
+	</sl-stats>
+	<sl-item ng-click="onClickRightHand(data.player)" ng-html="data.player.rightWeapon().icon()"></sl-item>
+	<sl-item ng-click="onClickLeftHand(data.player)" ng-html="data.player.leftWeapon().icon()"></sl-item>
+	<div class="cf"></div>
+</sl-party>
+
+<sl-actions>
+
+	<sl-spellcast ng-controller="SLSpellCtrl">
+	
+	
+
+	</sl-spellcast>
+
+	<sl-armory>
+		<sl-item ng-click="onAttackRight(data.player)">{{data.player.rightWeapon().icon()}}</sl-item>
+		<sl-item ng-click="onAttackLeft(data.player)">{{data.player.leftWeapon().icon()}}</sl-item>
+	</sl-armory>
+
+	<sl-move>
+		<div><a ng-click="rotateLeft()">↰</a> <a ng-click="forward()">⇧</a> <a ng-click="rotateRight()">↱</a></div>
+		<div><a ng-click="strafeLeft()">⇦</a> <a ng-click="backward()">⇩</a> <a ng-click="strafeRight()">⇨</a></div>
+		<div class="cf"></div>
+	</sl-move>
+
+ </sl-actions>
+ 
+
+ 
+
+<sl-inventory ng-show="data.showInventory">
+
+	<inner>
+	
+		<md-button ng-click="onCloseInventory()">X</md-button>
+
+		<sl-equipment>
+		
+			<helmet ng-if="equipment('helmet')" ng-click="clickEquipmentItem('helmet')">{{equipment('helmet').icon()}}</helmet>
+			<helmet ng-if="!equipment('helmet')" ng-click="clickEquipmentSlot('helmet')"></helmet>
+
+			<necklace ng-if="equipment('amulet')" ng-click="clickEquipmentItem('amulet')">{{equipment('amulet').icon()}}</amulet>
+			<amulet ng-if="!equipment('amulet')" ng-click="clickEquipmentSlot('amulet')"></amulet>
+
+		
+		</sl-equipment>
+		
+		<sl-items>
+			<sl-item ng-repeat="item in data.player.inventory" ng-click="clickItem(item)">{{item.icon()}}</sl-item>
+			<sl-item ng-click="clickEmptySpace">{{}}</sl-item>
+		</sl-items>
+		
+		<div class="cf"></div>
+		
+	</inner>
+</sl-inventory>
