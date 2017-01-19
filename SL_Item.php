@@ -138,7 +138,7 @@ class SL_Item extends GDO
 		return self::factory($names[array_rand($names)]);
 	}
 	
-	public static function factory($name)
+	public static function factory($name, $persist=true)
 	{
 		$stats = self::itemStats($name);
 		$itemclass = self::itemclass($name);
@@ -164,12 +164,17 @@ class SL_Item extends GDO
 			'i_priest' => self::diceStats($stats, $stat++),
 			'i_wizard' => self::diceStats($stats, $stat++),
 		));
-		if ($item->insert())
+		
+		if (!$persist)
+		{
+			return  $item;
+		}
+		else if ($item->insert())
 		{
 			self::$CACHE[$item->getID()] = $item;
 			return $item;
 		}
-		return  null;
+		return null;
 	}
 	
 	private static function diceStats(array $stats, $index)
@@ -185,4 +190,9 @@ class SL_Item extends GDO
 		}
 		return SL_Global::rand($minmax[0], $minmax[1]);
 	}
+	
+	###############
+	### Actions ###
+	###############
+	
 }

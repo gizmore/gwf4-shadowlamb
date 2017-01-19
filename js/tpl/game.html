@@ -1,5 +1,5 @@
 <canvas id="game-canvas" ng-keydown="onKeyDown($event)" ng-click="onClickCanvas($event)"></canvas>
- 
+
 <sl-party>
 	<sl-avatar ng-click="onClickAvatar(data.player)"><img ng-src="data.player.avatarPath()" /></sl-avatar>
 	<sl-stats>
@@ -35,20 +35,15 @@
  
 <sl-inventory ng-if="data.player && data.showInventory">
 	<sl-close-button ng-click="onCloseInventory()">X</sl-close-button>
-	<inner>
-		<sl-equipment>
-			<sl-item ng-repeat="slot in data.slots"
-			         class="{{slot}}"
-			         ng-click="onClickEquipment(data.player, slot)"
-			         ng-html="equipmentIcon(data.player, slot)"></sl-item>
-		</sl-equipment>
-		
-		<sl-items>
-			<sl-item ng-repeat="item in data.player.inventory" ng-click="clickItem(item)">{{item.icon()}}</sl-item>
-			<sl-item ng-click="clickEmptySpace">{{}}</sl-item>
-		</sl-items>
-		
-		<div class="cf"></div>
-		
-	</inner>
+	<sl-equipment>
+		<sl-item ng-repeat="slot in data.slots"
+		         class="{{slot}}"
+		         ng-click="onClickEquipment(data.player, slot)"
+		         ng-html="equipmentIcon(data.player, slot)"></sl-item>
+	</sl-equipment>
+	<sl-items>
+		<sl-item ng-repeat="(i,item) in data.player.inventory"
+		         ng-click="onClickInventory(data.player, i)"
+		         ng-html="inventoryIcon(data.player, i)"></sl-item>
+	</sl-items>
 </sl-inventory>

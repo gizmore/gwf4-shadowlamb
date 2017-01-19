@@ -74,7 +74,7 @@ angular.module('gwf4')
 		case 83: return $scope.backward();
 		case 81: return $scope.strafeLeft();
 		case 69: return $scope.strafeRight();
-		case 73: return $scope.onOpenInventory();
+		case 73: return $scope.onToggleInventory();
 		}
 	};
 	
@@ -169,16 +169,12 @@ angular.module('gwf4')
 	////////////
 	// Attack //
 	////////////
-	$scope.onAttackLeft = function(player) {
-		$scope.onAttack(player, player.leftWeapon());
-	};
-	$scope.onAttackRight = function(player) {
-		$scope.onAttack(player, player.rightWeapon());
-	};
-	$scope.onAttack = function(player, item) {
+	$scope.onAttackLeft = function(player) { $scope.onAttack(player, 0x2023, player.leftWeapon()); };
+	$scope.onAttackRight = function(player) { $scope.onAttack(player, 0x2024, player.rightWeapon()); };
+	$scope.onAttack = function(player, command, item) {
 		console.log('SLCtrl.onAttack()', player, item);
 		var gwsMessage = new GWS_Message().
-			cmd(0x2023).
+			cmd(command).
 			write8(BabylonSrvc.DIR.charCodeAt(0)).
 			write32(item?item.id:0).
 			write8(0x01);

@@ -353,7 +353,9 @@ final class SL_Commands extends GWS_Commands
 	/**
 	 * Attack
 	 */
-	public function xcmd_2023(GWS_Message $msg)
+	public function xcmd_2023(GWS_Message $msg) { $this->CMD_attack($msg, 'shield'); }
+	public function xcmd_2024(GWS_Message $msg) { $this->CMD_attack($msg, 'weapon'); }
+	public function CMD_attack(GWS_Message $msg, $slot)
 	{
 		$player = self::player($msg);
 
@@ -373,6 +375,21 @@ final class SL_Commands extends GWS_Commands
 		}
 		
 		# Check weapon
+		$weaponId = $msg->read32();
+		$weapon = $player->weapon($slot);
+		if ($weapon->getID() != $weaponId)
+		{
+			return $msg->replyError(self::ERR_HAND_SYNC);
+		}
+		
+		# Check type
+		$attackType = $msg->read8();
+		if (!SL_AttackFactory::isValidType($weapon, $attackType))
+		{
+			return $msg->replyError(self::ERR_ATTACK_TYPE);
+		}
+		
+		SL_AttackFactory::attack($player, $defender, $attackType, $weapon);
 	}
 	
 	/**
@@ -405,5 +422,6 @@ final class SL_Commands extends GWS_Commands
 	const ERR_SLOT_NOT_FIT= 0x200A;
 	const ERR_HAND_SYNC = 0x200B;
 	const ERR_WRONG_SLOT = 0x200C;
+	const ERR_ATTACK_TYPE = 0x200D;
 	const ERR_WAY_BLOCKED = 0x2010;
 }

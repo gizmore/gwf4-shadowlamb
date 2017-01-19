@@ -7,7 +7,7 @@ class SL_KickAttack extends SL_Attack
 		$this->defender = $defender;
 	}
 
-	public function attack()
+	public function execute()
 	{
 		
 	}

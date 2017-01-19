@@ -7,12 +7,11 @@ require_once 'SL_Levelup.php';
 require_once 'SL_Race.php';
 require_once 'SL_Player.php';
 require_once 'SL_Bot.php';
+require_once 'map/SL_Games.php';
 require_once 'SL_PlayerFactory.php';
 require_once 'fx/SL_Effect.php';
 require_once 'fx/SL_Throw.php';
-require_once 'combat/SL_Attack.php';
-require_once 'combat/SL_ThrowAttack.php';
-require_once 'map/SL_Games.php';
+require_once 'combat/SL_AttackFactory.php';
 
 final class Module_Shadowlamb extends GWF_Module
 {
@@ -38,14 +37,15 @@ final class Module_Shadowlamb extends GWF_Module
 	public function cfgLevels() { $r = $this->initRunes(); return $r['levels']; }
 	public function cfgRunes() { $r = $this->initRunes(); return $r['runes']; }
 	public function cfgRunecost() { $r = $this->initRunes(); return $r['runecost']; }
-	public function cfgWelcomeMessage() { return $this->getModuleVar('tgc_welcome_msg', 'Shadowlamb v6.1'); }
-	public function cfgBots() { return $this->getModuleVarBool('tgc_bots', '1'); }
-	public function cfgMaxBots() { return $this->getModuleVarInt('tgc_max_bots', '6'); }
+	public function cfgWelcomeMessage() { return $this->getModuleVar('sl_welcome_msg', 'Shadowlamb v6.1'); }
+	public function cfgBots() { return $this->getModuleVarBool('sl_bots', '1'); }
+	public function cfgMaxBots() { return $this->getModuleVarInt('sl_max_bots', '6'); }
+	public function cfgMaxInvSlots() { return $this->getModuleVarInt('sl_max_inv_slots', '30'); }
 	
-	public function cfgMaxFoodclanBots() { return $this->getModuleVarInt('tgc_max_foodclan_bots', '2'); }
-	public function cfgMaxAssassinBots() { return $this->getModuleVarInt('tgc_max_assassin_bots', '1'); }
-	public function cfgMaxNimdaBots() { return $this->getModuleVarInt('tgc_max_nimda_bots', '0'); }
-	public function cfgMaxRobberBots() { return $this->getModuleVarInt('tgc_max_loser_bots', '0'); }
+	public function cfgMaxFoodclanBots() { return $this->getModuleVarInt('sl_max_foodclan_bots', '2'); }
+	public function cfgMaxAssassinBots() { return $this->getModuleVarInt('sl_max_assassin_bots', '1'); }
+	public function cfgMaxNimdaBots() { return $this->getModuleVarInt('sl_max_nimda_bots', '0'); }
+	public function cfgMaxRobberBots() { return $this->getModuleVarInt('sl_max_loser_bots', '0'); }
 	
 	###############
 	### Startup ###
@@ -107,8 +107,11 @@ final class Module_Shadowlamb extends GWF_Module
 		$slots = json_encode(SL_Item::slots());
 		$eqslots = json_encode(SL_Item::$EQUIPMENT_SLOTS);
 		$items = json_encode(SL_Item::itemNames());
-		return sprintf('window.SL_CONFIG = { levels: %s, runes: %s, runecost: %s, version: %0.2f, races: %s, colors: %s, elements: %s, combat: %s, attributes: %s, skills: %s, slots: %s, eqslots: %s, items: %s };',
-				$levels, $runes, $runecost, $version, $races, $colors, $elements, $combat, $attributes, $skills, $slots, $eqslots, $items);
+		$config = json_encode(array(
+			'maxInvSlots' => $this->cfgMaxInvSlots(),
+		));
+		return sprintf('window.SL_CONFIG = { setting: %s, levels: %s, runes: %s, runecost: %s, version: %0.2f, races: %s, colors: %s, elements: %s, combat: %s, attributes: %s, skills: %s, slots: %s, eqslots: %s, items: %s };',
+				$config, $levels, $runes, $runecost, $version, $races, $colors, $elements, $combat, $attributes, $skills, $slots, $eqslots, $items);
 	}
 	
 	private function includeWebAssets()

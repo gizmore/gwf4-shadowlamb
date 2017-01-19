@@ -3,7 +3,7 @@ function SL_Player() {
 	this.position = new BABYLON.Vector3(0, 0, 0);
 	
 	this.equipment = {};
-	this.inventory = [];
+	this.inventory = new Array(SL_CONFIG.setting.maxInvSlots, null);
 	
 	this.isOwn = function() { return SL_PLAYER === this; };
 	

@@ -36,6 +36,7 @@ class SL_Player extends GDO
 	public static $FEELS = array('health', 'endurance', 'sober', 'awake', 'brave', 'satiness', 'drought', 'carry');
 	private $water = 100, $tired = 0, $food = 100, $alc = 0, $frightened = 0, $endurance = 0;
 
+	private $fists;
 	private $user = null, $baseLevel = 1, $adjustedLevel = 1;
 	
 	public static $DIR_X = array('N' => 0, 'S' => 0, 'E' => 1, 'W' => -1);
@@ -607,6 +608,21 @@ class SL_Player extends GDO
 		return $this->equipment('hand');
 	}
 	
+	public function weapon($slot)
+	{
+		$weapon = $this->equipment($slot);
+		return $weapon ? $weapon : $this->fists();
+	}
+	
+	public function fists()
+	{
+		if (!$this->fists)
+		{
+			$this->fists = SL_Item::factory('Fists', false);
+		}
+		return $this->fists;
+	}
+
 	public function equipment($slot)
 	{
 		return isset($this->equipment[$slot]) ? $this->equipment[$slot] : null;
