@@ -57,13 +57,13 @@ angular.module('gwf4')
 	
 	
 	BabylonSrvc.initPlayer = function(player) {
-		console.log('BabylonSrvc.initPlayer', player);
+//		console.log('BabylonSrvc.initPlayer', player);
         var sphere = BABYLON.Mesh.CreateSphere("player"+player.id, 12, 5.5, BabylonSrvc.SCENE);
         sphere.position = player.position;
 	};
 	
 	BabylonSrvc.addItem = function(item) {
-		console.log('BabylonSrvc.addItem()', item);
+//		console.log('BabylonSrvc.addItem()', item);
 		if (!item.mesh) {
 			var SQ = SL_Tile.SQ,
 				sq = SL_Tile.sq;

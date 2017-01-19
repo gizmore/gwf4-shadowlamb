@@ -1,12 +1,11 @@
+
 function SL_Item() {
 
-	this.iconPath = function() { return sprintf('%sindex.php?mo=Shadowlamb&me=Icon&name=%s', GWF_WEB_ROOT, this.name); };
-	this.icon = function() { return sprintf('<img src="%s" alt="%s" />', this.iconPath(), this.name); };
+	this.flyZ = function() { return this.flying ? -1 : 4; }; // In air y offset.
+	this.icon = function() { return SL_Item.Icon(this.name); };
+	this.iconPath = function() { return SL_Item.IconPath(this.name);  };
+
 	this.isAtPosition = function(x, y) { return (this.x == x) && (this.y == y); };
-	
-	this.flyZ = function() {
-		return this.flying ? -1 : 4;
-	};
 	
 	this.setupCursor = function() {
 //		var path = this.iconPath();
@@ -29,16 +28,26 @@ function SL_Item() {
 	};
 	
 	this.destroyMesh = function() {
-		this.mesh.dispose();
-		this.mesh = undefined;
+		if (this.mesh) {
+			this.mesh.dispose();
+			this.mesh = undefined;
+		}
 	};
 	
 	this.createMesh = function() {
-		SL_Item.BabylonSrvc.addItem(this);
+		if (!this.mash) {
+			SL_Item.BabylonSrvc.addItem(this);
+		}
 	};
 	
 	return this;
 }
+
+///////////
+// Icons //
+///////////
+SL_Item.Icon = function(name) { return sprintf('<img src="%s" alt="%s" />', SL_Item.IconPath(name), name); };
+SL_Item.IconPath = function(name) { return sprintf('%sindex.php?mo=Shadowlamb&me=Icon&name=%s', GWF_WEB_ROOT, name||'Unknown'); };
 
 ///////////
 // Cache //
@@ -64,7 +73,7 @@ SL_Item.getById = function(itemId) {
 /////////////
 SL_Item.nameFromInt = function(nameInt) { return SL_CONFIG.items[nameInt]; };
 SL_Item.slotFromInt = function(slotInt) { return SL_CONFIG.slots[slotInt-1]; };
-SL_Item.slotInt = function(slot) { var ix = SL_CONFIG.slots.indexOf(slot); return ix < 0 ? 0 : ix+1; };
+SL_Item.slotInt = function(slot) { return SL_CONFIG.slots.indexOf(slot) + 1; };
 SL_Item.itemsFromMessage = function(gwsMessage) {
 	var items = [];
 	var numItems = gwsMessage.read16();

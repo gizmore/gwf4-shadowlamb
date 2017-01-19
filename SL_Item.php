@@ -9,13 +9,15 @@ class SL_Item extends GDO
 {
 	public static $CACHE = array();
 	
-	public static $SLOTS = array('air', 'floor', 'hand',  'inventory',  'helmet', 'weapon', 'shield', 'boots', 'armor', 'ring', 'amulet');
-	public static function numSlots() { return count(self::$SLOTS); }
-	public static function slotsEnum() { return array_merge(array('none'), self::$SLOTS); }
-	public static function slotEnum($int) { return self::$SLOTS[$int-1]; }
+	public static $OTHER_SLOTS = array('air', 'floor', 'hand',  'inventory');
+	public static $EQUIPMENT_SLOTS = array('helmet', 'armor', 'legs', 'boots', 'weapon', 'shield', 'amulet', 'ring');
+	public static function slots() { return array_merge(self::$OTHER_SLOTS, self::$EQUIPMENT_SLOTS); }
+	public static function numSlots() { return count(self::slots()); }
+// 	public static function slotsEnum() { return array_merge(array('none'), self::$SLOTS); }
+	public static function slotEnum($int) { $slots = self::slots(); return $slots[$int-1]; }
 	public static function validSlotInt($int) { return ($int > 0) && ($slot <= self::numSlots()); }
-	public static function validPlayerSlotInt($int) { return ($int > 3) && ($int <= self::numSlots()); }
-	public static function slotInt($slot) { $i = array_search($slot, self::$SLOTS, true); return $i === false ? 0 : $i+1; }
+	public static function validEquipmentSlotInt($int) { return ($int > count(self::$OTHER_SLOTS)) && ($int <= self::numSlots()); }
+	public static function slotInt($slot) { $i = array_search($slot, self::slots(), true); return $i === false ? 0 : $i+1; }
 	
 	public $x, $y, $z;
 	
@@ -29,7 +31,7 @@ class SL_Item extends GDO
 		return array(
 			'i_id' => array(GDO::AUTO_INCREMENT),
 			'i_uid' => array(GDO::UINT|GDO::INDEX, GDO::NULL),
-			'i_slot' => array(GDO::ENUM, GDO::NOT_NULL, self::slotsEnum()),
+			'i_slot' => array(GDO::ENUM, GDO::NOT_NULL, self::slots()),
 			'i_name' => array(GDO::VARCHAR|GDO::ASCII|GDO::CASE_S, GDO::NOT_NULL, 32),
 				
 			'i_attack' => array(GDO::TINY|GDO::UINT, 0),

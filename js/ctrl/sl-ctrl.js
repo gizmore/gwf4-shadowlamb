@@ -8,11 +8,12 @@ angular.module('gwf4')
 	$scope.data = {
 		map: new SL_Map(),
 		players: PlayerSrvc.CACHE,
-		player: null,
+		player: SL_PLAYER,
 		floor: null,
 		showInventory: false,
+		slots: SL_CONFIG.eqslots,
+		
 	};
-	
 
 	$scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams) {
 //		console.log('SLCtrl.$on-stateChangeSuccess()', toState, toParams);
@@ -135,16 +136,34 @@ angular.module('gwf4')
 	
 	$scope.onClickAvatar = function(player) {
 		console.log('SLCtrl.onClickAvatar()', player);
-		$scope.onOpenInventory();
+		if ($scope.data.player === player) {
+			$scope.onToggleInventory();
+		}
+		else {
+			$scope.data.player = player;
+			$scope.onOpenInventory();
+		}
 	};
 
-	$scope.onClickLeftHand = function(player) { $scope.onClickHand(player, 'shield'); };
-	$scope.onClickRightHand = function(player) { $scope.onClickHand(player, 'weapon'); };
-	$scope.onClickHand = function(player, slot) {
-		console.log('SLCtrl.onClickHand()', player, slot);
-		var hand = SL_PLAYER.hand();
-		var gwsMessage = new GWS_Message().cmd(hand?0x2014:0x2015).write32(hand?hand.id:0).write8(SL_Item.slotInt(slot));
+	$scope.onClickLeftHand = function(player) { $scope.onClickEquipment(player, 'shield'); };
+	$scope.onClickRightHand = function(player) { $scope.onClickEquipment(player, 'weapon'); };
+	$scope.equipmentIcon = function(player, slot) {
+		var item = player.equipment[slot];
+		var name = item ? item.name : slot;
+		return SL_Item.Icon(name);
+	};
+	$scope.onClickEquipment = function(player, slot) {
+		console.log('SLCtrl.onClickEquipment()', player, slot);
+		// Send equip/unequip
+		var hand = player.hand();
+		var gwsMessage = new GWS_Message().cmd(hand?0x2014:0x2015).write8(SL_Item.slotInt(slot)).write32(hand?hand.id:0);
 		return WebsocketSrvc.sendBinary(gwsMessage);
+	};
+	$scope.onTakeInventory = function(player, itemId) {
+		
+	};
+	$scope.onPutInventory = function(player, itemId) {
+		
 	};
 	
 	////////////
@@ -225,7 +244,7 @@ angular.module('gwf4')
 	// Handlers //
 	//////////////
 	CommandSrvc.xcmd_2001 = function(gwsMessage) {
-		console.log('SLCtrl.xcmd_2001 POS()');
+//		console.log('SLCtrl.xcmd_2001 POS()');
 		var player = PlayerSrvc.getOrAddPlayer(gwsMessage.read32());
 		var oldZ = player.z;
 		var x = gwsMessage.read8();
@@ -248,6 +267,7 @@ angular.module('gwf4')
 		player.id = gwsMessage.read32();
 		player.updateOwn(gwsMessage);
 		PlayerSrvc.addPlayer(player);
+		$scope.$apply();
 	};
 
 	CommandSrvc.xcmd_2003 = function(gwsMessage) {
@@ -333,6 +353,16 @@ angular.module('gwf4')
 		newItem.restoreCursor();
 		SL_PLAYER.handItem(hand);
 		SL_PLAYER.equip(newItem, slot);
+		$scope.$apply();
+	};
+
+	CommandSrvc.xcmd_2027 = function(gwsMessage) {
+		console.log('SLCtrl.xcmd_2027 UNEQUIP()');
+		var slot = SL_Item.slotFromInt(gwsMessage.read8());
+		var hand = SL_Item.getById(gwsMessage.read32());
+		SL_PLAYER.handItem(hand);
+		SL_PLAYER.equipment[slot] = undefined;
+		$scope.$apply();
 	};
 
 	

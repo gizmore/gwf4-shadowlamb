@@ -104,10 +104,11 @@ final class Module_Shadowlamb extends GWF_Module
 		$combat = json_encode(SL_Player::$COMBAT);
 		$attributes = json_encode(SL_Player::$ATTRIBUTES);
 		$skills = json_encode(SL_Player::$SKILLS);
-		$slots = json_encode(SL_Item::$SLOTS);
+		$slots = json_encode(SL_Item::slots());
+		$eqslots = json_encode(SL_Item::$EQUIPMENT_SLOTS);
 		$items = json_encode(SL_Item::itemNames());
-		return sprintf('window.SL_CONFIG = { levels: %s, runes: %s, runecost: %s, version: %0.2f, races: %s, colors: %s, elements: %s, combat: %s, attributes: %s, skills: %s, slots: %s, items: %s };',
-				$levels, $runes, $runecost, $version, $races, $colors, $elements, $combat, $attributes, $skills, $slots, $items);
+		return sprintf('window.SL_CONFIG = { levels: %s, runes: %s, runecost: %s, version: %0.2f, races: %s, colors: %s, elements: %s, combat: %s, attributes: %s, skills: %s, slots: %s, eqslots: %s, items: %s };',
+				$levels, $runes, $runecost, $version, $races, $colors, $elements, $combat, $attributes, $skills, $slots, $eqslots, $items);
 	}
 	
 	private function includeWebAssets()

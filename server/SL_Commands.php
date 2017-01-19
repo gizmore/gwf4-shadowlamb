@@ -6,6 +6,33 @@ final class SL_Commands extends GWS_Commands
 {
 	private $sl;
 	
+	const SRV_POS = 0x2001;
+	const SRV_OWN = 0x2002;
+	const SRV_PLAYER = 0x2003;
+	const SRV_MAP = 0x2004;
+	const SRV_LVLUP = 0x2005;
+	const SRV_OUCH = 0x2010;
+	const SRV_ITEM_PICKUP = 0x2020;
+	const SRV_ITEM_DROP = 0x2021;
+	const SRV_ITEM_THROW = 0x2022;
+	const SRV_ITEM_FLY = 0x2023;
+	const SRV_ITEM_LAND = 0x2025;
+	const SRV_ITEM_INFO = 0x2024;
+	const SRV_ITEM_EQUIPPED = 0x2026;
+	const SRV_ITEM_UNEQUIPPED = 0x2027;
+	
+	const CLT_PLAYER_INFO = 0x2001;
+	const CLT_MOV = 0x2002;
+	const CLT_ITEM_INFO = 0x2003;
+	const CLT_PICKUP = 0x2010;
+	const CLT_DROP = 0x2011;
+	const CLT_THROW = 0x2012;
+	const CLT_EQUIP = 0x2014;
+	const CLT_UNEQUIP = 0x2015;
+	const CLT_ATTACK = 0x2023;
+	const CLT_RUNE = 0x2030;
+	const CLT_CAST = 0x2031;
+	
 	############
 	### Init ###
 	############
@@ -254,10 +281,17 @@ final class SL_Commands extends GWS_Commands
 	public function xcmd_2014(GWS_Message $msg)
 	{
 		$player = self::player($msg);
-		$handid = $msg->read32();
-		$hand = $player->hand();
+
+		# Check valid slot
+		$slotint = $msg->read8();
+		if (!SL_Item::validEquipmentSlotInt($slotint))
+		{
+			return $msg->replyError(self::ERR_NO_SLOT);
+		}
 		
 		# Check Hand sync
+		$handid = $msg->read32();
+		$hand = $player->hand();
 		if (!$hand)
 		{
 			return;# $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'NONE');
@@ -265,13 +299,6 @@ final class SL_Commands extends GWS_Commands
 		if ($hand->getID() != $handid)
 		{
 			return $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'MISSID');
-		}
-
-		# Check valid slot
-		$slotint = $msg->read8();
-		if (!SL_Item::validPlayerSlotInt($slotint))
-		{
-			return $msg->replyError(self::ERR_NO_SLOT);
 		}
 		
 		# Check slot fit
@@ -301,11 +328,12 @@ final class SL_Commands extends GWS_Commands
 	
 		# Check valid slot
 		$slotint = $msg->read8();
-		if (!SL_Item::validPlayerSlotInt($slotint))
+		if (!SL_Item::validEquipmentSlotInt($slotint))
 		{
 			return $msg->replyError(self::ERR_NO_SLOT);
 		}
 	
+		# Check hand empty
 		if ($player->hand())
 		{
 			return $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'WRONG');
@@ -313,10 +341,6 @@ final class SL_Commands extends GWS_Commands
 	
 		# Unequip
 		$slot = SL_Item::slotEnum($slotint);
-		if ($slot === 'inventory')
-		{
-				
-		}
 		if ($item = $player->unequip($slot))
 		{
 			# Reply
@@ -324,7 +348,6 @@ final class SL_Commands extends GWS_Commands
 			$payload.= $msg->write32($item->getID());
 			$msg->replyBinary(self::SRV_ITEM_UNEQUIPPED, $payload);
 		}
-	
 	}
 	
 	/**
@@ -350,7 +373,6 @@ final class SL_Commands extends GWS_Commands
 		}
 		
 		# Check weapon
-		
 	}
 	
 	/**
@@ -368,9 +390,6 @@ final class SL_Commands extends GWS_Commands
 	{
 		$player = self::player($msg);
 	}
-	
-	
-	
 
 
 
@@ -387,33 +406,4 @@ final class SL_Commands extends GWS_Commands
 	const ERR_HAND_SYNC = 0x200B;
 	const ERR_WRONG_SLOT = 0x200C;
 	const ERR_WAY_BLOCKED = 0x2010;
-	
-	const SRV_POS = 0x2001;
-	const SRV_OWN = 0x2002;
-	const SRV_PLAYER = 0x2003;
-	const SRV_MAP = 0x2004;
-	const SRV_LVLUP = 0x2005;
-	const SRV_OUCH = 0x2010;
-	const SRV_ITEM_PICKUP = 0x2020;
-	const SRV_ITEM_DROP = 0x2021;
-	const SRV_ITEM_THROW = 0x2022;
-	const SRV_ITEM_FLY = 0x2023;
-	const SRV_ITEM_LAND = 0x2025;
-	const SRV_ITEM_INFO = 0x2024;
-	const SRV_ITEM_EQUIPPED = 0x2026;
-	const SRV_ITEM_UNEQUIPPED = 0x2027;
-	
-	const CLT_PLAYER_INFO = 0x2001;
-	const CLT_MOV = 0x2002;
-	const CLT_ITEM_INFO = 0x2003;
-	const CLT_PICKUP = 0x2010;
-	const CLT_DROP = 0x2011;
-	const CLT_THROW = 0x2012;
-	const CLT_EQUIP = 0x2014;
-	const CLT_UNEQUIP = 0x2015;
-	const CLT_ATTACK = 0x2023;
-	const CLT_RUNE = 0x2030;
-	const CLT_CAST = 0x2031;
-	
-	}
-
+}

@@ -13,7 +13,6 @@
 </sl-party>
 
 <sl-actions>
-
 	<sl-spellcast ng-controller="SLSpellCtrl">
 		<sl-runes>
 			<sl-rune ng-if="spelldepth()==0" ng-repeat="(col,symb) in data.runes[0]" ng-click="rune(0, col)">{{symb}}</sl-rune>
@@ -23,38 +22,25 @@
 		</sl-runes>
 		<div><a ng-click="abort()">CANCEL</a><sl-spell>{{spell()}}</sl-spell><a ng-click="cast()">CAST</a></div>
 	</sl-spellcast>
-
 	<sl-armory>
 		<sl-item ng-click="onAttackRight(data.player)" ng-html="data.player.rightWeapon().icon()"></sl-item>
 		<sl-item ng-click="onAttackLeft(data.player)" ng-html="data.player.leftWeapon().icon()"></sl-item>
 	</sl-armory>
-
 	<sl-move>
 		<div><a ng-click="rotateLeft()">↰</a> <a ng-click="forward()">⇧</a> <a ng-click="rotateRight()">↱</a></div>
 		<div><a ng-click="strafeLeft()">⇦</a> <a ng-click="backward()">⇩</a> <a ng-click="strafeRight()">⇨</a></div>
 		<div class="cf"></div>
 	</sl-move>
-
- </sl-actions>
+</sl-actions>
  
-
- 
-
-<sl-inventory ng-show="data.showInventory">
-
+<sl-inventory ng-if="data.player && data.showInventory">
+	<sl-close-button ng-click="onCloseInventory()">X</sl-close-button>
 	<inner>
-	
-		<md-button ng-click="onCloseInventory()">X</md-button>
-
 		<sl-equipment>
-		
-			<helmet ng-if="equipment('helmet')" ng-click="clickEquipmentItem('helmet')">{{equipment('helmet').icon()}}</helmet>
-			<helmet ng-if="!equipment('helmet')" ng-click="clickEquipmentSlot('helmet')"></helmet>
-
-			<necklace ng-if="equipment('amulet')" ng-click="clickEquipmentItem('amulet')">{{equipment('amulet').icon()}}</amulet>
-			<amulet ng-if="!equipment('amulet')" ng-click="clickEquipmentSlot('amulet')"></amulet>
-
-		
+			<sl-item ng-repeat="slot in data.slots"
+			         class="{{slot}}"
+			         ng-click="onClickEquipment(data.player, slot)"
+			         ng-html="equipmentIcon(data.player, slot)"></sl-item>
 		</sl-equipment>
 		
 		<sl-items>

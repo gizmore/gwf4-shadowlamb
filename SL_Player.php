@@ -110,6 +110,9 @@ class SL_Player extends GDO
 	############
 	### Move ###
 	############
+	public function xFacing($direction) { return $this->x + self::$DIR_X[$direction]; }
+	public function yFacing($direction) { return $this->y + self::$DIR_Y[$direction]; }
+	
 	public function setGame($game)
 	{
 		$this->game = $game;
