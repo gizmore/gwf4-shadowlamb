@@ -15,9 +15,13 @@
 <sl-actions>
 
 	<sl-spellcast ng-controller="SLSpellCtrl">
-	
-	
-
+		<sl-runes>
+			<sl-rune ng-if="spelldepth()==0" ng-repeat="(col,symb) in data.runes[0]" ng-click="rune(0, col)">{{symb}}</sl-rune>
+			<sl-rune ng-if="spelldepth()==1" ng-repeat="(col,symb) in data.runes[1]" ng-click="rune(1, col)">{{symb}}</sl-rune>
+			<sl-rune ng-if="spelldepth()==2" ng-repeat="(col,symb) in data.runes[2]" ng-click="rune(2, col)">{{symb}}</sl-rune>
+			<sl-rune ng-if="spelldepth()==3" ng-repeat="(col,symb) in data.runes[3]" ng-click="rune(3, col)">{{symb}}</sl-rune>
+		</sl-runes>
+		<div><a ng-click="abort()">CANCEL</a><sl-spell>{{spell()}}</sl-spell><a ng-click="cast()">CAST</a></div>
 	</sl-spellcast>
 
 	<sl-armory>

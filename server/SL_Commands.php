@@ -305,17 +305,17 @@ final class SL_Commands extends GWS_Commands
 		{
 			return $msg->replyError(self::ERR_NO_SLOT);
 		}
-		
+	
 		if ($player->hand())
 		{
 			return $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'WRONG');
 		}
-
+	
 		# Unequip
 		$slot = SL_Item::slotEnum($slotint);
 		if ($slot === 'inventory')
 		{
-			
+				
 		}
 		if ($item = $player->unequip($slot))
 		{
@@ -324,8 +324,52 @@ final class SL_Commands extends GWS_Commands
 			$payload.= $msg->write32($item->getID());
 			$msg->replyBinary(self::SRV_ITEM_UNEQUIPPED, $payload);
 		}
+	
+	}
+	
+	/**
+	 * Attack
+	 */
+	public function xcmd_2023(GWS_Message $msg)
+	{
+		$player = self::player($msg);
+
+		# Check direction
+		$direction = chr($msg->read8());
+		if (!strpos(' NSEW', $direction))
+		{
+			return $msg->replyError(self::ERR_UNKNOWN_DIRECTION);
+		}
+		
+		# Check defender
+		$x = $player->xFacing($direction);
+		$y = $player->yFacing($direction);
+		if (!($defender = $player->floor->playerAt($x, $y)))
+		{
+			return; # ignore
+		}
+		
+		# Check weapon
 		
 	}
+	
+	/**
+	 * Rune
+	 */
+	public function xcmd_2030(GWS_Message $msg)
+	{
+		$player = self::player($msg);
+	}
+	
+	/**
+	 * Cast
+	 */
+	public function xcmd_2031(GWS_Message $msg)
+	{
+		$player = self::player($msg);
+	}
+	
+	
 	
 
 
@@ -367,5 +411,9 @@ final class SL_Commands extends GWS_Commands
 	const CLT_THROW = 0x2012;
 	const CLT_EQUIP = 0x2014;
 	const CLT_UNEQUIP = 0x2015;
-}
+	const CLT_ATTACK = 0x2023;
+	const CLT_RUNE = 0x2030;
+	const CLT_CAST = 0x2031;
+	
+	}
 

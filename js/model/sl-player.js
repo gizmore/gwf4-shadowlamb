@@ -73,8 +73,6 @@ function SL_Player() {
 			this.equipment[item.slot] = item;
 		}
 		this.inventory = SL_Item.itemsFromMessage(gwsMessage);
-		console.log(this);
-		alert(1);
 	};
 	
 	this.leftWeapon = function() {

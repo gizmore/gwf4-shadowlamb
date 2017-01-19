@@ -110,6 +110,7 @@ final class SL_Game
 	public function addEffect(SL_Effect $effect)
 	{
 		$this->effects[] = $effect;
+		$effect->start();
 	}
 
 	############
@@ -122,9 +123,10 @@ final class SL_Game
 		foreach ($this->effects as $i => $effect)
 		{
 			$effect->tick($this, $tick);
-			if ($effect->finished($this, $tick))
+			if ($effect->finished)
 			{
 				unset($this->effects[$i]);
+				$effect->finish();
 			}
 		}
 		

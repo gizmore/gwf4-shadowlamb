@@ -14,46 +14,56 @@ final class SL_Throw extends SL_Effect
 		$this->item->y = $player->y;
 		$this->item->z = $player->z;
 		$this->item->setPlayer(null, 'air');
-		$this->force = floor($player->strength() / ($item->getWeight() / 1000));
+		$this->force = ceil($player->strength()+2 / ($item->getWeight() / 1000));
 		
-		$player->giveXP('ninja', 4);
+		$player->giveXP('ninja', $this->force);
 	}
 	
-	public function finished(SL_Game $game, $tick)
+	public function start()
 	{
-		return $this->force <= 0;
+		$this->flyMessage(SL_Commands::SRV_ITEM_FLY);
 	}
 	
 	public function tick(SL_Game $game, $tick)
 	{
+		# New coords
 		$floor = $game->floor($this->item->z);
 		$x = $this->item->x + $this->vx;
 		$y = $this->item->y + $this->vy;
-		if ($this->finished($game, $tick) || (!$floor->canMove($x, $y)))
+
+		# Flying...
+		if ( ($this->force <= 0) || (!$floor->canMove($x, $y)) )
 		{
-			if ($target = $floor->playerAt($x, $y))
+			if ($this->force > 0)
 			{
-				$attack = new SL_ThrowAttack($this->player, $target, $this->item, $this->force);
-				$attack->execute();
+				if ($target = $floor->playerAt($x, $y))
+				{
+					$attack = new SL_ThrowAttack($this->player, $target, $this->item, $this->force);
+					$attack->execute();
+				}
 			}
-			$this->force = 0;
-			$this->item->setPlayer(null, 'floor');
 			$floor->addItem($this->item);
-			$payload = GWS_Message::wr16(SL_Commands::SRV_ITEM_LAND);
+			$this->finished = true;
+			$this->flyMessage(SL_Commands::SRV_ITEM_LAND);
 		}
 		else
 		{
 			$this->item->x = $x;
 			$this->item->y = $y;
-			$payload = GWS_Message::wr16(SL_Commands::SRV_ITEM_FLY);
+			$this->flyMessage(SL_Commands::SRV_ITEM_FLY);
 		}
+		$this->force--;
+	}
+	
+	private function flyMessage($command)
+	{
+		$payload = GWS_Message::wr16($command);
 		$payload.= GWS_Message::wr32($this->player->getID());
 		$payload.= GWS_Message::wr32($this->item->getID());
 		$payload.= GWS_Message::wr8($this->item->x);
 		$payload.= GWS_Message::wr8($this->item->y);
 		$payload.= GWS_Message::wr8($this->item->z);
 		$this->game->sendBinary($payload);
-	
-		$this->force--;
 	}
+	
 }

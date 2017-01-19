@@ -9,11 +9,12 @@ function SL_Item() {
 	};
 	
 	this.setupCursor = function() {
-		$('#game-canvas').css('cursor', this.iconPath());
+//		var path = this.iconPath();
+//		$('#game-canvas').hover(function(){$(this).css('cursor', 'crosshair')});
 	};
 	
 	this.restoreCursor = function() {
-		$('#game-canvas').css('cursor', 'auto');
+//		$('#game-canvas').css('cursor', 'auto');
 	};
 	
 	this.move = function(x, y, z) {
@@ -85,7 +86,7 @@ SL_Item.fromMessage = function(gwsMessage) {
 	SL_Item.parseStats(item, gwsMessage, SL_CONFIG.attributes);
 	SL_Item.parseStats(item, gwsMessage, SL_CONFIG.skills);
 	SL_Item.CACHE[item.id] = item;
-	console.log('SL_Item.fromMessage()', item);
+//	console.log('SL_Item.fromMessage()', item);
 	return item;
 };
 SL_Item.parseStats = function(item, gwsMessage, fields) {

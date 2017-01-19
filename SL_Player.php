@@ -44,6 +44,8 @@ class SL_Player extends GDO
 	public $x, $y, $z;
 
 	public $game, $floor;
+	
+	public $runes = array();
 
 	private $base = array();
 	private $effects = array();

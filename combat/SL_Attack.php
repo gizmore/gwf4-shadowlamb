@@ -1,11 +1,7 @@
 <?php
-class SL_Attack
+abstract class SL_Attack
 {
 	protected $attacker, $defender;
 	
-	public function execute()
-	{
-	
-	}
-	
+	public abstract function execute();
 }

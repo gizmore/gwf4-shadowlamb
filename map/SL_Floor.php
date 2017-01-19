@@ -24,6 +24,18 @@ final class SL_Floor
 	public function randX() { return SL_Global::rand(1, $this->game->width()-2); }
 	public function randY() { return SL_Global::rand(1, $this->game->height()-2); }
 	
+	public function playerAt($x, $y)
+	{
+		foreach ($this->game->players() as $player)
+		{
+			if (($player->x === $x) && ($player->y === $y) && ($player->z === $this->number))
+			{
+				return $player;
+			}
+		}
+		return null;
+	}
+	
 	public function __construct(SL_Game $game)
 	{
 		$this->game = $game;
@@ -51,6 +63,7 @@ final class SL_Floor
 		$item->x = $x;
 		$item->y = $y;
 		$item->z = $this->number;
+		$item->setPlayer(null, 'floor');
 		$this->items[$item->getID()] = $item;
 	}
 	
@@ -121,16 +134,5 @@ final class SL_Floor
 		return $payload;
 	}
 	
-	public function playerAt($x, $y)
-	{
-		foreach ($this->game->players() as $player)
-		{
-			if (($player->x === $x) && ($player->y === $y))
-			{
-				return $player;
-			}
-		}
-		return null;
-	}
 	
 }
