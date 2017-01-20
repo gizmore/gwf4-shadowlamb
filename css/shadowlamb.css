@@ -139,26 +139,6 @@ sl-rune {
 	display: inline-block;
 }
 
-/** Equipment **/
-sl-equipment {
-	display: block;
-	position: relative;
-	width: 24em;
-	height: 32em;
-	float: left;
-	background: #999;
-	border: 2px solid #fff;
-}
-sl-equipment > sl-item { position: absolute; }
-sl-item.helmet { left: 10em; top: 2em; }
-sl-item.armor { left: 10em; top: 10em; }
-sl-item.legs { left: 10em; top: 18em; }
-sl-item.boots { left: 10em; top: 26em; }
-sl-item.weapon { left: 2em; top: 12em; }
-sl-item.shield { left: 18em; top: 12em; }
-sl-item.amulet { left: 16em; top: 4em; }
-sl-item.ring { left: 16em; top: 20em; }
-
 /** Inventory **/
 sl-inventory {
 	display: block;
@@ -174,12 +154,49 @@ sl-inventory {
 sl-close-button {
 	display: block;
 	position: absolute;
-	top: 0;
-	left: 0;
+	top: 0px;
+	left: 0px;
 	background: #f00;
 	width: 1em;
 	height: 1em;
-} 
+	content: "X";
+}
+
+/** Equipment **/
+sl-equipment {
+	display: block;
+	position: relative;
+	width: 24em;
+	height: 32em;
+	background: #999;
+	border: 2px solid #fff;
+	float: left;
+}
+sl-equipment > sl-item { position: absolute; }
+sl-item.helmet { left: 10em; top: 2em; }
+sl-item.armor { left: 10em; top: 10em; }
+sl-item.legs { left: 10em; top: 18em; }
+sl-item.boots { left: 10em; top: 26em; }
+sl-item.weapon { left: 2em; top: 12em; }
+sl-item.shield { left: 18em; top: 12em; }
+sl-item.amulet { left: 16em; top: 4em; }
+sl-item.ring { left: 16em; top: 20em; }
+
+
+sl-items {
+	display: block;
+	position: relative;
+	width: 24em;
+	height: 32em;
+	background: #999;
+	border: 2px solid #fff;
+	float: left;
+	
+}
+
+sl-items sl-item {
+	float: left;
+}
 
 sl-item {
 	display: block;

@@ -21,6 +21,7 @@ angular.module('gwf4')
 
 	$scope.rune = function(row, col) {
 		console.log('SLSpellCtrl.rune()', row, col);
+		$scope.refocus();
 		var gwsMessage = new GWS_Message().cmd(0x2030).sync().write8(row).write8(col);
 		return WebsocketSrvc.sendBinary(gwsMessage).then($scope.addRune);
 	};
@@ -30,10 +31,12 @@ angular.module('gwf4')
 	};
 
 	$scope.abort = function() {
+		$scope.refocus();
 		$scope.init();
 	};
 
 	$scope.cast = function() {
+		$scope.refocus();
 		$scope.init();
 		var gwsMessage = new GWS_Message().cmd(0x2031);
 		return WebsocketSrvc.sendBinary(gwsMessage);

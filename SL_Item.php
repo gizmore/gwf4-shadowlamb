@@ -135,7 +135,12 @@ class SL_Item extends GDO
 	public static function factoryRandom()
 	{
 		$names = array_keys(self::itemsStats());
-		return self::factory($names[array_rand($names)]);
+		$name = 'Fists';
+		while($name === 'Fists')
+		{
+			$name = $names[array_rand($names)];
+		}
+		return self::factory($name);
 	}
 	
 	public static function factory($name, $persist=true)

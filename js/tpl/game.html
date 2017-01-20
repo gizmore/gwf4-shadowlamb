@@ -42,8 +42,8 @@
 		         ng-html="equipmentIcon(data.player, slot)"></sl-item>
 	</sl-equipment>
 	<sl-items>
-		<sl-item ng-repeat="(i,item) in data.player.inventory"
-		         ng-click="onClickInventory(data.player, i)"
-		         ng-html="inventoryIcon(data.player, i)"></sl-item>
+		<sl-item ng-repeat="item in data.player.inventory track by $index"
+		         ng-click="onClickInventory(data.player, $index)"
+		         ng-html="inventoryIcon(data.player, $index)"></sl-item>
 	</sl-items>
 </sl-inventory>

@@ -3,7 +3,7 @@ function SL_Player() {
 	this.position = new BABYLON.Vector3(0, 0, 0);
 	
 	this.equipment = {};
-	this.inventory = new Array(SL_CONFIG.setting.maxInvSlots, null);
+	this.inventory = new Array(SL_CONFIG.setting.maxInvSlots);
 	
 	this.isOwn = function() { return SL_PLAYER === this; };
 	
@@ -72,7 +72,13 @@ function SL_Player() {
 			var item = loaded[i];
 			this.equipment[item.slot] = item;
 		}
-		this.inventory = SL_Item.itemsFromMessage(gwsMessage);
+		var inv = SL_Item.itemsFromMessage(gwsMessage), i;
+		for (i in inv) {
+			this.inventory[i] = inv[i];
+		}
+		for (i = inv.length; i < this.inventory.length; i++) {
+			this.inventory[i] = false;
+		}
 	};
 	
 	this.leftWeapon = function() {

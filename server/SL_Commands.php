@@ -20,6 +20,8 @@ final class SL_Commands extends GWS_Commands
 	const SRV_ITEM_INFO = 0x2024;
 	const SRV_ITEM_EQUIPPED = 0x2026;
 	const SRV_ITEM_UNEQUIPPED = 0x2027;
+	const SRV_ITEM_DEPOSIT = 0x2028;
+	const SRV_ITEM_WITHDRAW = 0x2029;
 	
 	const CLT_PLAYER_INFO = 0x2001;
 	const CLT_MOV = 0x2002;
@@ -29,6 +31,8 @@ final class SL_Commands extends GWS_Commands
 	const CLT_THROW = 0x2012;
 	const CLT_EQUIP = 0x2014;
 	const CLT_UNEQUIP = 0x2015;
+	const CLT_DEPOSIT = 0x2016;
+	const CLT_WITHDRAW = 0x2017;
 	const CLT_ATTACK = 0x2023;
 	const CLT_RUNE = 0x2030;
 	const CLT_CAST = 0x2031;
@@ -351,6 +355,86 @@ final class SL_Commands extends GWS_Commands
 	}
 	
 	/**
+	 * Deposit to inventory
+	 */
+	public function xcmd_2016(GWS_Message $msg)
+	{
+		$player = self::player($msg);
+		$index = $msg->read8(); # unused atm
+		
+		# Check Hand sync
+		$handid = $msg->read32();
+		$hand = $player->hand();
+		if (!$hand)
+		{
+			return $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'NONE');
+		}
+		if ($hand->getID() != $handid)
+		{
+			return $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'MISSID');
+		}
+		
+		# Check inventory load
+		if (count($player->inventory()) >= $this->sl->cfgMaxInvSlots())
+		{
+			return $msg->replyError(self::ERR_INV_FULL);
+		}
+		
+		# Give
+		if (!$player->giveItem($hand))
+		{
+			return $msg->replyErrorMesssage(self::ERR_DB);
+		}
+		$player->handItem();
+
+		# Reply
+		$payload = $msg->write8($index);
+		$payload.= $msg->write32($hand->getID());
+		$msg->replyBinary(self::SRV_ITEM_DEPOSIT, $payload);
+	}
+	
+	/**
+	 * Withdraw from inventory
+	 */
+	public function xcmd_2017(GWS_Message $msg)
+	{
+		$player = self::player($msg);
+		$index = $msg->read8(); # unused atm
+		
+		# Check Hand sync
+		$handid = $msg->read32();
+		$hand = $player->hand();
+		if ($hand && ($hand->getID() != $handid))
+		{
+			return $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'MISSID');
+		}
+		elseif ($handid != 0)
+		{
+			return $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'SYNC');
+		}
+		
+		# Chck item exist in inv
+		$itemid = $msg->read32();
+		if (!($item = $player->inventoryItem($itemid)))
+		{
+			return $msg->replyError(self::ERR_ITEM_NOT_NEAR);
+		}
+		
+		if ($hand)
+		{
+			$player->giveItem($hand);
+		}
+		
+		$player->handItem($item);
+		
+		# Reply
+		$payload = $msg->write8($index); # Inv index withdrawn
+		$payload.= $msg->write32($item->getID()); # Now in hand
+		$payload.= $msg->write32($hand ? $hand->getID() : 0); # Now the same index in inv
+		$msg->replyBinary(self::SRV_ITEM_WITHDRAW, $payload);
+	}
+	
+	/**
 	 * Attack
 	 */
 	public function xcmd_2023(GWS_Message $msg) { $this->CMD_attack($msg, 'shield'); }
@@ -423,5 +507,8 @@ final class SL_Commands extends GWS_Commands
 	const ERR_HAND_SYNC = 0x200B;
 	const ERR_WRONG_SLOT = 0x200C;
 	const ERR_ATTACK_TYPE = 0x200D;
+	const ERR_INV_FULL = 0x200E;
+	const ERR_DB = 0x200F;
 	const ERR_WAY_BLOCKED = 0x2010;
+	
 }

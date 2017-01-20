@@ -603,6 +603,15 @@ class SL_Player extends GDO
 	#############
 	### Items ###
 	#############
+	public function inventory()
+	{
+		return $this->inventory;
+	}
+	public function inventoryItem($itemId)
+	{
+		return isset($this->inventory[$itemId]) ? $this->inventory[$itemId] : null;
+	}
+	
 	public function hand()
 	{
 		return $this->equipment('hand');
@@ -658,7 +667,7 @@ class SL_Player extends GDO
 		return $old;
 	}
 	
-	public function handItem($item)
+	public function handItem($item=null)
 	{
 		if ($item)
 		{
@@ -691,7 +700,9 @@ class SL_Player extends GDO
 		)))
 		{
 			$this->inventory[$item->getID()] = $item;
+			return true;
 		}
+		return false;
 	}
 
 	public function loadedItem(SL_Item $item)

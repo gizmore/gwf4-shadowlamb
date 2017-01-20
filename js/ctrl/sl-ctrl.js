@@ -5,6 +5,8 @@ angular.module('gwf4')
 	SL_Item.BabylonSrvc = BabylonSrvc;
 	SL_Item.WebsocketSrvc = WebsocketSrvc;
 	
+	var $CANVAS = jQuery('#game-canvas');
+	
 	$scope.data = {
 		map: new SL_Map(),
 		players: PlayerSrvc.CACHE,
@@ -12,7 +14,6 @@ angular.module('gwf4')
 		floor: null,
 		showInventory: false,
 		slots: SL_CONFIG.eqslots,
-		
 	};
 
 	$scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams) {
@@ -35,6 +36,7 @@ angular.module('gwf4')
 		$scope.data.map.init(data.config);
 		BabylonSrvc.init();
 		BabylonSrvc.rotated();
+		$scope.refocus();
 	};
 
 	$scope.joinFailure = function(error) {
@@ -55,6 +57,7 @@ angular.module('gwf4')
 
 	$scope.move = function(direction) {
 		console.log('SLCtrl.move()', direction);
+		$scope.refocus();
 		var gwsMessage = new GWS_Message().cmd(0x2002).sync().write8(direction.charCodeAt(0));
 		return WebsocketSrvc.sendBinary(gwsMessage);
 	};
@@ -78,6 +81,22 @@ angular.module('gwf4')
 		}
 	};
 	
+	$scope.onClickAvatar = function(player) {
+		console.log('SLCtrl.onClickAvatar()', player);
+		if ($scope.data.player === player) {
+			$scope.onToggleInventory();
+		}
+		else {
+			$scope.data.player = player;
+			$scope.onOpenInventory();
+		}
+		$scope.refocus();
+	};
+	
+	$scope.refocus = function() {
+		$CANVAS.focus();
+	};
+
 	/////////////////////
 	// Item management //
 	/////////////////////
@@ -134,36 +153,47 @@ angular.module('gwf4')
 		return WebsocketSrvc.sendBinary(gwsMessage);
 	};
 	
-	$scope.onClickAvatar = function(player) {
-		console.log('SLCtrl.onClickAvatar()', player);
-		if ($scope.data.player === player) {
-			$scope.onToggleInventory();
-		}
-		else {
-			$scope.data.player = player;
-			$scope.onOpenInventory();
-		}
-	};
-
 	$scope.onClickLeftHand = function(player) { $scope.onClickEquipment(player, 'shield'); };
 	$scope.onClickRightHand = function(player) { $scope.onClickEquipment(player, 'weapon'); };
 	$scope.equipmentIcon = function(player, slot) {
 		var item = player.equipment[slot];
-		var name = item ? item.name : slot;
-		return SL_Item.Icon(name);
+		return $scope.itemIcon(item, slot);
 	};
 	$scope.onClickEquipment = function(player, slot) {
 		console.log('SLCtrl.onClickEquipment()', player, slot);
+		$scope.refocus();
 		// Send equip/unequip
 		var hand = player.hand();
 		var gwsMessage = new GWS_Message().cmd(hand?0x2014:0x2015).write8(SL_Item.slotInt(slot)).write32(hand?hand.id:0);
 		return WebsocketSrvc.sendBinary(gwsMessage);
 	};
-	$scope.onTakeInventory = function(player, itemId) {
-		
+	$scope.inventoryIcon = function(player, index) {
+		var item = player.inventory[index];
+		return $scope.itemIcon(item, 'blank');
 	};
-	$scope.onPutInventory = function(player, itemId) {
-		
+	$scope.itemIcon = function(item, slot) {
+		var name = item ? item.name : slot;
+		return SL_Item.Icon(name);
+	};
+	$scope.onClickInventory = function(player, index) {
+		console.log('SLCtrl.onClickInventory()', player, index);
+		if (player.inventory[index]) {
+			$scope.onWithdrawInventory(player, index);
+		}
+		else if (player.hand()) {
+			$scope.onDepositInventory(player, index)
+		}
+	};
+	$scope.onDepositInventory = function(player, index) {
+		console.log('SLCtrl.onDepositInventory()', player, index);
+		var gwsMessage = new GWS_Message().cmd(0x2016).write8(index).write32(player.hand().id);
+		return WebsocketSrvc.sendBinary(gwsMessage);
+	};
+	$scope.onWithdrawInventory = function(player, index) {
+		console.log('SLCtrl.onWithdrawInventory()', player, index);
+		var hand = player.hand();
+		var gwsMessage = new GWS_Message().cmd(0x2017).write8(index).write32(hand?hand.id:0).write32(player.inventory[index].id);
+		return WebsocketSrvc.sendBinary(gwsMessage);
 	};
 	
 	////////////
@@ -173,6 +203,7 @@ angular.module('gwf4')
 	$scope.onAttackRight = function(player) { $scope.onAttack(player, 0x2024, player.rightWeapon()); };
 	$scope.onAttack = function(player, command, item) {
 		console.log('SLCtrl.onAttack()', player, item);
+		$scope.refocus();
 		var gwsMessage = new GWS_Message().
 			cmd(command).
 			write8(BabylonSrvc.DIR.charCodeAt(0)).
@@ -360,7 +391,24 @@ angular.module('gwf4')
 		SL_PLAYER.equipment[slot] = undefined;
 		$scope.$apply();
 	};
+	
+	CommandSrvc.xcmd_2028 = function(gwsMessage) {
+		console.log('SLCtrl.xcmd_2028 DEPOSIT()');
+		var index = gwsMessage.read8();
+		SL_PLAYER.inventory[index] = SL_PLAYER.hand();
+		SL_PLAYER.handItem();
+		$scope.$apply();
+	};
 
+	CommandSrvc.xcmd_2029 = function(gwsMessage) {
+		console.log('SLCtrl.xcmd_2029 WITHDRAW()');
+		var index = gwsMessage.read8();
+		var item1 = SL_Item.getById(gwsMessage.read32()); // now hand
+		var item2 = SL_Item.getById(gwsMessage.read32()); // now inv
+		SL_PLAYER.handItem(item1);
+		SL_PLAYER.inventory[index] = item2 || false;
+		$scope.$apply();
+	};
 	
 
 });

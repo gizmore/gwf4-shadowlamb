@@ -38,6 +38,8 @@ final class SL_Throw extends SL_Effect
 			{
 				if ($target = $floor->playerAt($x, $y))
 				{
+					$this->item->x = $x;
+					$this->item->y = $y;
 					$attack = new SL_ThrowAttack($this->player, $target, $this->item, $this->force);
 					$attack->execute();
 				}
