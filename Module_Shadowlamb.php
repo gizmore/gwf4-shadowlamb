@@ -9,9 +9,10 @@ require_once 'SL_Player.php';
 require_once 'SL_Bot.php';
 require_once 'map/SL_Games.php';
 require_once 'SL_PlayerFactory.php';
+require_once 'SL_ItemFactory.php';
 require_once 'fx/SL_Effect.php';
 require_once 'fx/SL_Throw.php';
-require_once 'combat/SL_AttackFactory.php';
+require_once 'SL_Action.php';
 
 final class Module_Shadowlamb extends GWF_Module
 {
@@ -107,11 +108,12 @@ final class Module_Shadowlamb extends GWF_Module
 		$slots = json_encode(SL_Item::slots());
 		$eqslots = json_encode(SL_Item::$EQUIPMENT_SLOTS);
 		$items = json_encode(SL_Item::itemNames());
+		$actions = json_encode(SL_ItemFactory::actionNames());
 		$config = json_encode(array(
 			'maxInvSlots' => $this->cfgMaxInvSlots(),
 		));
-		return sprintf('window.SL_CONFIG = { setting: %s, levels: %s, runes: %s, runecost: %s, version: %0.2f, races: %s, colors: %s, elements: %s, combat: %s, attributes: %s, skills: %s, slots: %s, eqslots: %s, items: %s };',
-				$config, $levels, $runes, $runecost, $version, $races, $colors, $elements, $combat, $attributes, $skills, $slots, $eqslots, $items);
+		return sprintf('window.SL_CONFIG = { setting: %s, levels: %s, runes: %s, runecost: %s, version: %0.2f, races: %s, colors: %s, elements: %s, combat: %s, attributes: %s, skills: %s, slots: %s, eqslots: %s, items: %s, actions: %s };',
+				$config, $levels, $runes, $runecost, $version, $races, $colors, $elements, $combat, $attributes, $skills, $slots, $eqslots, $items, $actions);
 	}
 	
 	private function includeWebAssets()
@@ -144,12 +146,14 @@ final class Module_Shadowlamb extends GWF_Module
 		$this->addJavascript('model/sl-map.js');
 		# Ctrl
 		$this->addJavascript('ctrl/sl-ctrl.js');
+		$this->addJavascript('ctrl/sl-combat-ctrl.js');
 		$this->addJavascript('ctrl/sl-spell-ctrl.js');
 		$this->addJavascript('ctrl/sl-gamelist-ctrl.js');
 		$this->addJavascript('ctrl/sl-sidebar-ctrl.js');
 		# Srvc
 		$this->addJavascript('srvc/sl-babylon-srvc.js');
 		$this->addJavascript('srvc/sl-player-srvc.js');
+		$this->addJavascript('srvc/sl-item-srvc.js');
 		$this->addJavascript('srvc/sl-effect-srvc.js');
 		# Dialog
 // 		$this->addJavascript('dlg/sl-inventory-dlg.js');

@@ -22,9 +22,14 @@
 		</sl-runes>
 		<div><a ng-click="abort()">CANCEL</a><sl-spell>{{spell()}}</sl-spell><a ng-click="cast()">CAST</a></div>
 	</sl-spellcast>
-	<sl-armory>
-		<sl-item ng-click="onAttackRight(data.player)" ng-html="data.player.rightWeapon().icon()"></sl-item>
-		<sl-item ng-click="onAttackLeft(data.player)" ng-html="data.player.leftWeapon().icon()"></sl-item>
+	<sl-armory ng-controller="SLCombatCtrl">
+		<div ng-if="data.combatCode <= 0">
+			<sl-item ng-click="onWeaponRight(data.player)" ng-html="data.player.rightWeapon().icon()"></sl-item>
+			<sl-item ng-click="onWeaponLeft(data.player)" ng-html="data.player.leftWeapon().icon()"></sl-item>
+		</div>
+		<sl-action ng-if="data.combatCode > 0"
+		           ng-repeat="action in data.combatActions track by $index"
+		           ng-click="onAttack(data.player, $index)">{{action}}</sl-action>
 	</sl-armory>
 	<sl-move>
 		<div><a ng-click="rotateLeft()">↰</a> <a ng-click="forward()">⇧</a> <a ng-click="rotateRight()">↱</a></div>

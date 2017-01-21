@@ -20,6 +20,7 @@ class SL_Item extends GDO
 	public static function slotInt($slot) { $i = array_search($slot, self::slots(), true); return $i === false ? 0 : $i+1; }
 	
 	public $x, $y, $z;
+	private $actions = array();
 	
 	###########
 	### GDO ###
@@ -54,6 +55,11 @@ class SL_Item extends GDO
 		);
 	}
 	
+	public function afterCreate()
+	{
+		$this->actions = SL_ItemFactory::itemActions($this);
+	}
+	
 	##############
 	### Getter ###
 	##############
@@ -73,6 +79,10 @@ class SL_Item extends GDO
 	#############
 	### Cache ###
 	#############
+	/**
+	 * @param int $itemId
+	 * @return SL_Item
+	 */
 	public static function getCached($itemId)
 	{
 		return isset(self::$CACHE[$itemId]) ? self::$CACHE[$itemId] : null;
@@ -98,6 +108,9 @@ class SL_Item extends GDO
 		$payload .= GWS_Message::wr8($this->x);
 		$payload .= GWS_Message::wr8($this->y);
 		$payload .= GWS_Message::wr8($this->z);
+		$payload .= GWS_Message::wr8($this->actionID(0));
+		$payload .= GWS_Message::wr8($this->actionID(1));
+		$payload .= GWS_Message::wr8($this->actionID(2));
 // 		$payload .= GWS_Message::wr32($this->getUserID());
 		$payload .= GWS_Message::wr8($this->getSlotInt());
 		$payload .= GWS_Message::wr16($this->getNameInt());
@@ -120,6 +133,7 @@ class SL_Item extends GDO
 		{
 			$itemclass = self::itemClass($data['i_name']);
 			$item = new $itemclass($data);
+			$item->afterCreate();
 			self::$CACHE[$item->getID()] = $item;
 			$player->loadedItem($item);
 		}
@@ -169,7 +183,7 @@ class SL_Item extends GDO
 			'i_priest' => self::diceStats($stats, $stat++),
 			'i_wizard' => self::diceStats($stats, $stat++),
 		));
-		
+		$item->afterCreate();
 		if (!$persist)
 		{
 			return  $item;
@@ -199,5 +213,14 @@ class SL_Item extends GDO
 	###############
 	### Actions ###
 	###############
+	public function actionID($index)
+	{
+		return SL_ItemFactory::actionToID(self::actionName($index));
+	}
+	
+	public function actionName($index)
+	{
+		return isset($this->actions[$index]) ? $this->actions[$index] : '';
+	}
 	
 }

@@ -22,6 +22,7 @@ final class SL_Commands extends GWS_Commands
 	const SRV_ITEM_UNEQUIPPED = 0x2027;
 	const SRV_ITEM_DEPOSIT = 0x2028;
 	const SRV_ITEM_WITHDRAW = 0x2029;
+	const SRV_ITEM_ACTIONS = 0x2030;
 	
 	const CLT_PLAYER_INFO = 0x2001;
 	const CLT_MOV = 0x2002;
@@ -44,6 +45,7 @@ final class SL_Commands extends GWS_Commands
 	{
 		GWF_Log::logCron('SL_Commands::init()');
 		$this->sl = Module_Shadowlamb::instance();
+		SL_ItemFactory::init();
 		SL_Global::init(31337, $this);
 		SL_Spell::init();
 		SL_Global::$GAMES->createGame();
@@ -77,6 +79,10 @@ final class SL_Commands extends GWS_Commands
 	##############
 	### Helper ###
 	##############
+	/**
+	 * @param GWS_Message $msg
+	 * @return SL_Player
+	 */
 	private static function player(GWS_Message $msg)
 	{
 		return SL_Global::getOrCreatePlayer($msg->user());
@@ -309,7 +315,7 @@ final class SL_Commands extends GWS_Commands
 		$slot = SL_Item::slotEnum($slotint);
 		if (!$player->slotFit($hand, $slot))
 		{
-			return $msg->replyError(self::ERR_WRONG_SLOT);
+			return;# $msg->replyError(self::ERR_WRONG_SLOT);
 		}
 		
 		# Exchange
@@ -404,9 +410,12 @@ final class SL_Commands extends GWS_Commands
 		# Check Hand sync
 		$handid = $msg->read32();
 		$hand = $player->hand();
-		if ($hand && ($hand->getID() != $handid))
+		if ($hand)
 		{
-			return $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'MISSID');
+			if ($hand->getID() != $handid)
+			{
+				return $msg->replyErrorMessage(self::ERR_HAND_SYNC, 'MISSID');
+			}
 		}
 		elseif ($handid != 0)
 		{
@@ -434,6 +443,31 @@ final class SL_Commands extends GWS_Commands
 		$msg->replyBinary(self::SRV_ITEM_WITHDRAW, $payload);
 	}
 	
+// 	/**
+// 	 * Item actions
+// 	 */
+// 	public function xcmd_2025(GWS_Message $msg)
+// 	{
+// 		$player = self::player($msg);
+		
+// 		# Get item
+// 		if (!($item = SL_Item::getCached($msg->read32())))
+// 		{
+// 			return $msg->replyError(self::ERR_UNKNOWN_ITEM);
+// 		}
+// 		if ($item->getUserID() != $player->getID())
+// 		{
+// 			return $msg->replyErrorMessage(self::ERR_UNKNOWN_ITEM, 'OWN');
+// 		}
+		
+// 		# Reply
+// 		$payload = $msg->write32($item->getID());
+// 		$payload.= $msg->writeString($item->actionName(0));
+// 		$payload.= $msg->writeString($item->actionName(1));
+// 		$payload.= $msg->writeString($item->actionName(2));
+// 		$msg->replyBinary(self::SRV_ITEM_ACTIONS, $payload);
+// 	}
+	
 	/**
 	 * Attack
 	 */
@@ -453,27 +487,25 @@ final class SL_Commands extends GWS_Commands
 		# Check defender
 		$x = $player->xFacing($direction);
 		$y = $player->yFacing($direction);
-		if (!($defender = $player->floor->playerAt($x, $y)))
-		{
-			return; # ignore
-		}
+		$defender = $player->floor->playerAt($x, $y);
 		
 		# Check weapon
 		$weaponId = $msg->read32();
 		$weapon = $player->weapon($slot);
-		if ($weapon->getID() != $weaponId)
+		if ( (!$weapon) || ($weapon->getID() != $weaponId) )
 		{
 			return $msg->replyError(self::ERR_HAND_SYNC);
 		}
 		
 		# Check type
-		$attackType = $msg->read8();
-		if (!SL_AttackFactory::isValidType($weapon, $attackType))
+		if (!($classname = SL_ItemFactory::actionClassname($msg->read8())))
 		{
-			return $msg->replyError(self::ERR_ATTACK_TYPE);
+			return $msg->replyError(self::ERR_UNKNOWN_ACTION);
 		}
 		
-		SL_AttackFactory::attack($player, $defender, $attackType, $weapon);
+		# Exec
+		$action = new $classname($player->game, $weapon, $player, $defender, $direction);
+		$action->execute();
 	}
 	
 	/**
@@ -492,8 +524,6 @@ final class SL_Commands extends GWS_Commands
 		$player = self::player($msg);
 	}
 
-
-
 	const ERR_UNKNOWN_GAME = 0x2001;
 	const ERR_ALREADY_IN_GAME = 0x2002;
 	const ERR_UNKNOWN_PLAYER = 0x2003;
@@ -510,5 +540,5 @@ final class SL_Commands extends GWS_Commands
 	const ERR_INV_FULL = 0x200E;
 	const ERR_DB = 0x200F;
 	const ERR_WAY_BLOCKED = 0x2010;
-	
+	const ERR_UNKNOWN_ACTION = 0x2011;
 }

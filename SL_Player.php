@@ -44,7 +44,15 @@ class SL_Player extends GDO
 
 	public $x, $y, $z;
 
-	public $game, $floor;
+	/**
+	 * @var SL_Game;
+	 */
+	public $game;
+	
+	/**
+	 * @var SL_Floor;
+	 */
+	public $floor;
 	
 	public $runes = array();
 
@@ -617,6 +625,10 @@ class SL_Player extends GDO
 		return $this->equipment('hand');
 	}
 	
+	/**
+	 * @param String $slot
+	 * @return SL_Weapon
+	 */
 	public function weapon($slot)
 	{
 		$weapon = $this->equipment($slot);
@@ -663,6 +675,7 @@ class SL_Player extends GDO
 	public function unequip($slot)
 	{
 		$old = $this->equipment($slot);
+		unset($this->equipment[$slot]);
 		$this->handItem($old);
 		return $old;
 	}

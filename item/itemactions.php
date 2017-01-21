@@ -1,5 +1,6 @@
 <?php
 return array(
-	'Fists' => 'punch,kick,warcry',
-	'Dagger' => 'throw,stab',
+	'Fists' => 'Punch,Kick,Warcry',
+	'Dagger' => 'Throw,Stab',
+	'ShortSword' => 'Stab,Slash,Block',
 );

@@ -1,10 +1,8 @@
-
 function SL_Item() {
 
 	this.flyZ = function() { return this.flying ? -1 : 4; }; // In air y offset.
 	this.icon = function() { return SL_Item.Icon(this.name); };
 	this.iconPath = function() { return SL_Item.IconPath(this.name);  };
-
 	this.isAtPosition = function(x, y) { return (this.x == x) && (this.y == y); };
 	
 	this.setupCursor = function() {
@@ -88,6 +86,7 @@ SL_Item.fromMessage = function(gwsMessage) {
 	item.x = gwsMessage.read8();
 	item.y = gwsMessage.read8();
 	item.z = gwsMessage.read8();
+	item.actions = [ gwsMessage.read8(), gwsMessage.read8(), gwsMessage.read8() ];
 	item.slot = SL_Item.slotFromInt(gwsMessage.read8());
 	item.name = SL_Item.nameFromInt(gwsMessage.read16());
 	item.weight = gwsMessage.read16();

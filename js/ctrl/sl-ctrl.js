@@ -196,21 +196,6 @@ angular.module('gwf4')
 		return WebsocketSrvc.sendBinary(gwsMessage);
 	};
 	
-	////////////
-	// Attack //
-	////////////
-	$scope.onAttackLeft = function(player) { $scope.onAttack(player, 0x2023, player.leftWeapon()); };
-	$scope.onAttackRight = function(player) { $scope.onAttack(player, 0x2024, player.rightWeapon()); };
-	$scope.onAttack = function(player, command, item) {
-		console.log('SLCtrl.onAttack()', player, item);
-		$scope.refocus();
-		var gwsMessage = new GWS_Message().
-			cmd(command).
-			write8(BabylonSrvc.DIR.charCodeAt(0)).
-			write32(item?item.id:0).
-			write8(0x01);
-		return WebsocketSrvc.sendBinary(gwsMessage);
-	};
 	
 //	//////////
 //	// Zoom //
