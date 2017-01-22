@@ -1,6 +1,6 @@
 'use strict';
 angular.module('gwf4')
-.controller('SLCtrl', function($scope, $document, WebsocketSrvc, CommandSrvc, PlayerSrvc, EffectSrvc, BabylonSrvc) {
+.controller('SLCtrl', function($scope, $document, WebsocketSrvc, ActionSrvc, CommandSrvc, PlayerSrvc, ItemSrvc, EffectSrvc, BabylonSrvc) {
 	
 	SL_Item.BabylonSrvc = BabylonSrvc;
 	SL_Item.WebsocketSrvc = WebsocketSrvc;
@@ -107,6 +107,7 @@ angular.module('gwf4')
 	$scope.onClickCanvas = function($event) {
 		var yratio = $event.pageY / $('#game-canvas').height();
 //		console.log('SLCtrl.onClickCanvas()', $event.pageY, yratio);
+		$scope.data.combatCode = 0x0000;
 		if (yratio > 0.76) {
 			$scope.onClickCanvasFloor();
 		}
@@ -392,6 +393,20 @@ angular.module('gwf4')
 		var item2 = SL_Item.getById(gwsMessage.read32()); // now inv
 		SL_PLAYER.handItem(item1);
 		SL_PLAYER.inventory[index] = item2 || false;
+		$scope.$apply();
+	};
+	
+	CommandSrvc.xcmd_2030 = function(gwsMessage) {
+		console.log('SLCtrl.xcmd_2030 ACTION()');
+		var action = ItemSrvc.IdToAction(gwsMessage.read8());
+		var attackerId = gwsMessage.read32();
+		var attacker = attackerId ? PlayerSrvc.getOrAddPlayer(attackerId) : null;
+		var defenderId = gwsMessage.read32();
+		var defender = defenderId ? PlayerSrvc.getOrAddPlayer(defenderId) : null;
+		var itemId = gwsMessage.read32();
+		var item = itemId ? SL_Item.getById(itemId) : null;
+		var direction = String.fromCharCode(gwsMessage.read8());
+		ActionSrvc.execute(action, attacker, defender, item, direction);
 		$scope.$apply();
 	};
 	

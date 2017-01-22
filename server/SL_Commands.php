@@ -22,7 +22,7 @@ final class SL_Commands extends GWS_Commands
 	const SRV_ITEM_UNEQUIPPED = 0x2027;
 	const SRV_ITEM_DEPOSIT = 0x2028;
 	const SRV_ITEM_WITHDRAW = 0x2029;
-	const SRV_ITEM_ACTIONS = 0x2030;
+	const SRV_ACTION = 0x2030;
 	
 	const CLT_PLAYER_INFO = 0x2001;
 	const CLT_MOV = 0x2002;
@@ -476,6 +476,8 @@ final class SL_Commands extends GWS_Commands
 	public function CMD_attack(GWS_Message $msg, $slot)
 	{
 		$player = self::player($msg);
+		$game = $player->game;
+		$game instanceof SL_Game;
 
 		# Check direction
 		$direction = chr($msg->read8());
@@ -504,10 +506,13 @@ final class SL_Commands extends GWS_Commands
 		}
 		
 		# Exec
-		$action = new $classname($player->game, $weapon, $player, $defender, $direction);
+		$action = new $classname($weapon, $player, $defender, $direction);
 		$action->execute();
-	}
-	
+		
+		# Announce
+		$payload = $action->payload();
+		$game->sendBinary($payload);
+	}	
 	/**
 	 * Rune
 	 */

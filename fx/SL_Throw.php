@@ -1,13 +1,14 @@
 <?php
 final class SL_Throw extends SL_Effect
 {
-	private $game, $player, $item, $vx, $vy, $force;
+	private $game, $player, $item, $vx, $vy, $force, $direction;
 	
 	public function __construct(SL_Player $player, SL_Item $item, $direction)
 	{
 		$this->player = $player;
 		$this->game = $player->game;
 		$this->item = $item;
+		$this->direction = $direction;
 		$this->vx = SL_Player::$DIR_X[$direction];
 		$this->vy = SL_Player::$DIR_Y[$direction];
 		$this->item->x = $player->x;
@@ -40,7 +41,8 @@ final class SL_Throw extends SL_Effect
 				{
 					$this->item->x = $x;
 					$this->item->y = $y;
-					$attack = new SL_ThrowAttack($this->player, $target, $this->item, $this->force);
+					$attack = new SL_ThrowAttackAction($this->item, $this->player, $target, $this->direction);
+					$attack->setForce($this->force);
 					$attack->execute();
 				}
 			}

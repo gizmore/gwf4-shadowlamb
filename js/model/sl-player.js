@@ -107,7 +107,6 @@ function SL_Player() {
 		}
 	};
 
-	
 	this.equip = function(item, slot) {
 		console.log('SL_Player.equip()', item.name, slot);
 		var old = this.equipment[slot];
@@ -119,7 +118,7 @@ function SL_Player() {
 	};
 	
 	this.unequip = function(slot) {
-		
+		this.equipment[slot] = false;
 	};
 
 	return this;

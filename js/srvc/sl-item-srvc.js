@@ -10,6 +10,7 @@ angular.module('gwf4')
 	ItemSrvc.CACHE = {};
 	
 	ItemSrvc.itemAction = function(item, idx) {
+		console.log('ItemSrvc.itemAction()', item, idx);
 		return ItemSrvc.IdToAction(item.actions[idx]);
 	};
 	

@@ -153,6 +153,7 @@ final class Module_Shadowlamb extends GWF_Module
 		# Srvc
 		$this->addJavascript('srvc/sl-babylon-srvc.js');
 		$this->addJavascript('srvc/sl-player-srvc.js');
+		$this->addJavascript('srvc/sl-action-srvc.js');
 		$this->addJavascript('srvc/sl-item-srvc.js');
 		$this->addJavascript('srvc/sl-effect-srvc.js');
 		# Dialog

@@ -7,6 +7,10 @@ angular.module('gwf4')
 	EffectSrvc.ouch = function() {
 		console.log('EffectSrvc.ouch()');
 	};
+	
+	EffectSrvc.onThrow = function(player, item) {
+		console.log('EffectSrvc.onThrow()', player, item);
+	};
 
 	EffectSrvc.onThrowCollision = function(item) {
 		console.log('EffectSrvc.onThrowCollision()', item);
