@@ -59,15 +59,9 @@ abstract class SL_Action
 		$this->direction = $direction;
 	}
 	
-	public function payload()
-	{
-		return
-			GWS_Message::wr16(SL_Commands::SRV_ACTION).
-			GWS_Message::wr8($this->actionId()).
-			GWS_Message::wr32($this->attacker()->getID()).
-			GWS_Message::wr32($this->defender ? $this->defender->getID() : 0).
-			GWS_Message::wr32($this->item ? $this->item->getID() : 0).
-			GWS_Message::wr8(ord($this->direction));
-		}
-	
+	public function payloadBegin() { return  GWS_Message::wr16(SL_Commands::SRV_ACTION).GWS_Message::wr8($this->actionId()); }
+	public function payloadAttacker() { return GWS_Message::wr32($this->attacker ? $this->attacker->getID() : 0); }
+	public function payloadDefender() { return GWS_Message::wr32($this->defender ? $this->defender->getID() : 0); }
+	public function payloadItem() { return GWS_Message::wr32($this->item ? $this->item->getID() : 0); }
+	public function payloadDirection() { return GWS_Message::wr8(ord($this->direction)); }
 }

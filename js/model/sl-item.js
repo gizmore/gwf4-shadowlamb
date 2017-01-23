@@ -5,15 +5,6 @@ function SL_Item() {
 	this.iconPath = function() { return SL_Item.IconPath(this.name);  };
 	this.isAtPosition = function(x, y) { return (this.x == x) && (this.y == y); };
 	
-	this.setupCursor = function() {
-//		var path = this.iconPath();
-//		$('#game-canvas').hover(function(){$(this).css('cursor', 'crosshair')});
-	};
-	
-	this.restoreCursor = function() {
-//		$('#game-canvas').css('cursor', 'auto');
-	};
-	
 	this.move = function(x, y, z) {
 		this.x = x; this.y = y; this.z = z;
 		if (this.mesh) {

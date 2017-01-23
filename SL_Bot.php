@@ -25,23 +25,9 @@ final class SL_Bot extends SL_Player
 	public function sendText($messageText) { printf("%s << %s\n", $this->displayName(), $messageText); }
 	public function sendBinary($messageData) { printf("%s << %s\n", $this->displayName(), 'BINARY'); }
 	
-	############
-	### Kill ###
-	############
-	public function killedBy(SL_Player $killer)
-	{
-		if ($this->deletePlayer())
-		{
-			$payload = json_encode(array(
-				'killer' => $killer->getName(),
-				'victim' => $this->getName(),
-			));
-			$this->forNearMe(function(SL_Player $player, $payload) {
-				$player->sendCommand('SL_BOTKILL', $payload);
-			}, $payload);
-		}
-	}
-	
+	##############
+	### Delete ###
+	##############
 	public function deletePlayer()
 	{
 		if (parent::deletePlayer())

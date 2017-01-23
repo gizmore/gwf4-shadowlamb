@@ -216,4 +216,10 @@ sl-item {
 	border: 2px solid #612;
 }
 
+sl-item.handicon {
+	position: absolute;
+	border: none;
+	pointer-events: none;
+}
+
 

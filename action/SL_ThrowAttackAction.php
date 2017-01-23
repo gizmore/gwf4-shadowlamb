@@ -11,5 +11,8 @@ class SL_ThrowAttackAction extends SL_Action
 	
 	public function execute()
 	{
+		$attack = new SL_DamageAction($this->item(), $this->attacker(), $this->defender(), $this->direction());
+		$attack->setDamage($this->force);
+		$attack->execute();
 	}
 }

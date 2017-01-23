@@ -58,8 +58,8 @@ angular.module('gwf4')
 	
 	BabylonSrvc.initPlayer = function(player) {
 //		console.log('BabylonSrvc.initPlayer', player);
-        var sphere = BABYLON.Mesh.CreateSphere("player"+player.id, 12, 5.5, BabylonSrvc.SCENE);
-        sphere.position = player.position;
+        player.mesh = BABYLON.Mesh.CreateSphere("player"+player.id, 12, 5.5, BabylonSrvc.SCENE);
+        player.mesh.position = player.position;
 	};
 	
 	BabylonSrvc.addItem = function(item) {

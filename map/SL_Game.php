@@ -15,6 +15,10 @@ final class SL_Game
 	private $items, $effects;
 	
 	public function map() { return $this->map; }
+	/**
+	 * @param int $z
+	 * @return SL_Floor
+	 */
 	public function floor($z) { return $this->map->floor($z); }
 	public function handler() { return $this->handler; }
 	public function bots() { return $this->bots; }

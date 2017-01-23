@@ -357,7 +357,12 @@ class SL_Player extends GDO
 	public function ninja() { return $this->power('ninja'); }
 	public function priest() { return $this->power('priest'); }
 	public function wizard() { return $this->power('wizard'); }
-
+	
+	public function attack() { return $this->power('attack'); }
+	public function defense() { return $this->power('defense'); }
+	public function damage() { return $this->power('damage'); }
+	public function armor() { return $this->power('armor'); }
+	
 	public function carry() { return 0.0; }
 	public function health() { return Common::clamp($this->hp() /  min(30, $this->maxHP()), 0.0, 1.0); }
 	public function endurance() { return Common::clamp($this->endurance / 60.0, 0.25, 1.0); }
@@ -552,21 +557,6 @@ class SL_Player extends GDO
 	############
 	### Kill ###
 	############
-	public function deletePlayer()
-	{
-		if ($this->delete())
-		{
-			$this->gameOver();
-			SL_Global::removePlayer($this);
-			return true;
-		}
-	}
-
-	public function killedBy(SL_Player $killer)
-	{
-		$this->respawn();
-	}
-
 	public function respawn()
 	{
 		$this->base['hp'] = $this->maxHP();
@@ -577,35 +567,14 @@ class SL_Player extends GDO
 		$this->endurance = $this->dexterity();
 		$this->rehashFeels();
 	}
-
-	public function getLoot()
+	
+	public function deletePlayer()
 	{
-		return array();
-	}
-
-	public function giveLoot(array $loot)
-	{
-		$this->food += $loot['food'];
-		$this->water += $loot['water'];
-		return $this->increase('p_gold', $loot['gold']);
-	}
-
-	public function killXP(SL_Player $killer)
-	{
-		if ($killer->isBot())
+		if ($this->delete())
 		{
-			return 1 + $this->playerLevel();
+			SL_Global::removePlayer($this);
+			return true;
 		}
-		else
-		{
-			return ceil($this->adjustedLevel() / 5);
-		}
-	}
-
-	public function gameOver()
-	{
-		$payload = $this->ownPlayerDTO();
-		$this->sendCommand('SL_GAMEOVER', json_encode($payload));
 	}
 	
 	#############
@@ -674,10 +643,12 @@ class SL_Player extends GDO
 	
 	public function unequip($slot)
 	{
-		$old = $this->equipment($slot);
+		$item = $this->equipment($slot);
+		$item->x = $this->x;
+		$item->y = $this->y;
+		$item->z = $this->z;
 		unset($this->equipment[$slot]);
-		$this->handItem($old);
-		return $old;
+		return $item;
 	}
 	
 	public function handItem($item=null)

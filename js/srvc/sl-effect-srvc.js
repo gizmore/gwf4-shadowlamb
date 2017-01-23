@@ -8,6 +8,10 @@ angular.module('gwf4')
 		console.log('EffectSrvc.ouch()');
 	};
 	
+	EffectSrvc.onMiss = function(player) {
+		console.log('EffectSrvc.onMiss()', player);
+	};
+
 	EffectSrvc.onThrow = function(player, item) {
 		console.log('EffectSrvc.onThrow()', player, item);
 	};
@@ -19,6 +23,14 @@ angular.module('gwf4')
 	EffectSrvc.onPickupItem = function(item) {
 		console.log('EffectSrvc.onPickupItem()', item);
 	}
+	
+	EffectSrvc.onDamage = function(player, damage) {
+		console.log('EffectSrvc.onDamage()', player, damage);
+	};
+
+	EffectSrvc.onKill = function(player) {
+		console.log('EffectSrvc.onKill()', player);
+	};
 
 	return EffectSrvc;
 });

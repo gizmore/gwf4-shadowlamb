@@ -18,6 +18,12 @@ final class SL_ItemFactory
 	public static function init()
 	{
 		self::$ACTIONS = array();
+		GWF_File::filewalker(self::actionClassPath(), function($entry, $path) {
+			$action = substr($entry, 3, strlen($entry)-13);
+			self::$ACTIONS[] = $action;
+			require_once $path;
+		});
+		
 		self::$ITEM_ACTIONS = require_once self::actionPath();
 		self::$ITEM_ACTIONS = array_map(function($n) { return explode(',', $n); }, self::$ITEM_ACTIONS);
 		foreach (self::$ITEM_ACTIONS as $itemName => $actions)
@@ -31,9 +37,6 @@ final class SL_ItemFactory
 			}
 		}
 		
-		GWF_File::filewalker(self::actionClassPath(), function($entry, $path) {
-			require_once $path;
-		});
 	}
 	
 	public static function actionToID($action)
@@ -49,12 +52,9 @@ final class SL_ItemFactory
 	
 	public static function actionClassname($actionId)
 	{
-		echo "$actionId\n";
 		if ($action = self::idToAction($actionId))
 		{
-			echo "$action\n";
 			$classname = sprintf('SL_%sAction', $action);
-			echo "$classname\n";
 			if (class_exists($classname))
 			{
 				return $classname;

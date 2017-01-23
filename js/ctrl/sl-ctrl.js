@@ -14,6 +14,33 @@ angular.module('gwf4')
 		floor: null,
 		showInventory: false,
 		slots: SL_CONFIG.eqslots,
+		mx: -100,
+		my: -100,
+	};
+
+	///////////////
+	// Hand icon //
+	///////////////
+	$scope.changedCursor = function() {
+		$scope.$apply();
+		$scope.onMouseMove();
+	};
+
+	$scope.onMouseMove = function($event) {
+		var d = $scope.data;
+		if ($event) {
+			d.mx = $event.pageX;
+			d.my = $event.pageY;
+		}
+		$('sl-item.handicon').css('left', d.mx+'px').css('top', d.my+'px');
+	};
+	
+	$scope.hand = function() {
+		return SL_PLAYER ? SL_PLAYER.hand() : null;
+	};
+	
+	$scope.handIcon = function() {
+		return SL_PLAYER.hand().icon();
 	};
 
 	$scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams) {
@@ -188,7 +215,7 @@ angular.module('gwf4')
 	$scope.onDepositInventory = function(player, index) {
 		console.log('SLCtrl.onDepositInventory()', player, index);
 		var gwsMessage = new GWS_Message().cmd(0x2016).write8(index).write32(player.hand().id);
-		return WebsocketSrvc.sendBinary(gwsMessage);
+		WebsocketSrvc.sendBinary(gwsMessage);
 	};
 	$scope.onWithdrawInventory = function(player, index) {
 		console.log('SLCtrl.onWithdrawInventory()', player, index);
@@ -280,7 +307,7 @@ angular.module('gwf4')
 		player.id = gwsMessage.read32();
 		player.updateOwn(gwsMessage);
 		PlayerSrvc.addPlayer(player);
-		$scope.$apply();
+		$scope.changedCursor();
 	};
 
 	CommandSrvc.xcmd_2003 = function(gwsMessage) {
@@ -305,6 +332,7 @@ angular.module('gwf4')
 		var item = $scope.data.floor.removeItem(gwsMessage.read32());
 		if (item) {
 			SL_PLAYER.handItem(item);
+			$scope.changedCursor();
 			EffectSrvc.onPickupItem(item);
 		}
 	};
@@ -312,13 +340,13 @@ angular.module('gwf4')
 	CommandSrvc.xcmd_2021 = function(gwsMessage) {
 		console.log('SLCtrl.xcmd_2021 DROP()');
 		SL_PLAYER.handItem();
+		$scope.changedCursor();
 		var player = PlayerSrvc.getOrAddPlayer(gwsMessage.read32());
 		var item = SL_Item.getById(gwsMessage.read32());
 		if (item) {
 			item.x = gwsMessage.read8();
 			item.y = gwsMessage.read8();
 			item.z = gwsMessage.read8();
-			item.restoreCursor();
 			item.createMesh();
 			$scope.data.floor.addItem(item);
 		}
@@ -327,9 +355,9 @@ angular.module('gwf4')
 	CommandSrvc.xcmd_2022 = function(gwsMessage) {
 		console.log('SLCtrl.xcmd_2022 THROW()');
 		SL_PLAYER.handItem();
+		$scope.changedCursor();
 		var item = CommandSrvc.flyCommand(gwsMessage, true);
 		if (item) {
-			item.restoreCursor();
 			$scope.data.floor.addItem(item);
 		}
 	};
@@ -363,10 +391,9 @@ angular.module('gwf4')
 		var slot = SL_Item.slotFromInt(gwsMessage.read8());
 		var newItem = SL_Item.getById(gwsMessage.read32());
 		var hand = SL_Item.getById(gwsMessage.read32());
-		newItem.restoreCursor();
 		SL_PLAYER.handItem(hand);
 		SL_PLAYER.equip(newItem, slot);
-		$scope.$apply();
+		$scope.changedCursor();
 	};
 
 	CommandSrvc.xcmd_2027 = function(gwsMessage) {
@@ -375,7 +402,7 @@ angular.module('gwf4')
 		var hand = SL_Item.getById(gwsMessage.read32());
 		SL_PLAYER.handItem(hand);
 		SL_PLAYER.equipment[slot] = undefined;
-		$scope.$apply();
+		$scope.changedCursor();
 	};
 	
 	CommandSrvc.xcmd_2028 = function(gwsMessage) {
@@ -383,7 +410,7 @@ angular.module('gwf4')
 		var index = gwsMessage.read8();
 		SL_PLAYER.inventory[index] = SL_PLAYER.hand();
 		SL_PLAYER.handItem();
-		$scope.$apply();
+		$scope.changedCursor();
 	};
 
 	CommandSrvc.xcmd_2029 = function(gwsMessage) {
@@ -393,22 +420,15 @@ angular.module('gwf4')
 		var item2 = SL_Item.getById(gwsMessage.read32()); // now inv
 		SL_PLAYER.handItem(item1);
 		SL_PLAYER.inventory[index] = item2 || false;
-		$scope.$apply();
+		$scope.changedCursor();
 	};
 	
 	CommandSrvc.xcmd_2030 = function(gwsMessage) {
 		console.log('SLCtrl.xcmd_2030 ACTION()');
 		var action = ItemSrvc.IdToAction(gwsMessage.read8());
-		var attackerId = gwsMessage.read32();
-		var attacker = attackerId ? PlayerSrvc.getOrAddPlayer(attackerId) : null;
-		var defenderId = gwsMessage.read32();
-		var defender = defenderId ? PlayerSrvc.getOrAddPlayer(defenderId) : null;
-		var itemId = gwsMessage.read32();
-		var item = itemId ? SL_Item.getById(itemId) : null;
-		var direction = String.fromCharCode(gwsMessage.read8());
-		ActionSrvc.execute(action, attacker, defender, item, direction);
-		$scope.$apply();
+		if (ActionSrvc.execute(action, gwsMessage)) {
+			$scope.$apply();
+		}
 	};
-	
 
 });

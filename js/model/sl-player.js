@@ -4,7 +4,6 @@ function SL_Player() {
 	
 	this.equipment = {};
 	this.inventory = new Array(SL_CONFIG.setting.maxInvSlots);
-	
 	this.isOwn = function() { return SL_PLAYER === this; };
 	
 	this.move = function(x, y, z) {
@@ -27,6 +26,12 @@ function SL_Player() {
 		}
 	};
 	
+	this.destroyMesh = function() {
+		if (this.mesh) {
+			this.mesh.dispose();
+			this.mesh = undefined;
+		}
+	};
 	
 	this.updateOwn = function(gwsMessage) {
 		this.updateOther(gwsMessage);
@@ -102,7 +107,6 @@ function SL_Player() {
 		this.equipment['hand'] = item;
 		if (item) {
 			item.slot = 'hand';
-			item.setupCursor();
 			item.destroyMesh();
 		}
 	};

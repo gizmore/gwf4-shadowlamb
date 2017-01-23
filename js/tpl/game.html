@@ -1,4 +1,4 @@
-<canvas id="game-canvas" ng-keydown="onKeyDown($event)" ng-click="onClickCanvas($event)"></canvas>
+<canvas id="game-canvas" ng-keydown="onKeyDown($event)" ng-click="onClickCanvas($event)" ng-mousemove="onMouseMove($event)"></canvas>
 
 <sl-party>
 	<sl-avatar ng-click="onClickAvatar(data.player)"><img ng-src="data.player.avatarPath()" /></sl-avatar>
@@ -52,3 +52,5 @@
 		         ng-html="inventoryIcon(data.player, $index)"></sl-item>
 	</sl-items>
 </sl-inventory>
+
+<sl-item class="handicon" ng-if="hand()" ng-html="handIcon()"></sl-item>

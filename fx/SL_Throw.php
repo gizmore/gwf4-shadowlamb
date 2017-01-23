@@ -32,7 +32,6 @@ final class SL_Throw extends SL_Effect
 		$x = $this->item->x + $this->vx;
 		$y = $this->item->y + $this->vy;
 
-		# Flying...
 		if ( ($this->force <= 0) || (!$floor->canMove($x, $y)) )
 		{
 			if ($this->force > 0)

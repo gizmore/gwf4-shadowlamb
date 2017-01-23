@@ -141,7 +141,13 @@ final class SL_Commands extends GWS_Commands
 	
 	public function cmd_sl_partgame(GWS_Message $msg)
 	{
-	
+		$player = self::player($msg);
+		if (!$player->game)
+		{
+			return $msg->replyError(self::ERR_UNKNOWN_GAME);
+		}
+		$player->game->part($player);
+// 		$player->game->sendBinary($payload); # Announce
 	}
 	
 	
@@ -353,6 +359,8 @@ final class SL_Commands extends GWS_Commands
 		$slot = SL_Item::slotEnum($slotint);
 		if ($item = $player->unequip($slot))
 		{
+			$player->handItem($item);
+				
 			# Reply
 			$payload = $msg->write8($slotint);
 			$payload.= $msg->write32($item->getID());
@@ -505,13 +513,9 @@ final class SL_Commands extends GWS_Commands
 			return $msg->replyError(self::ERR_UNKNOWN_ACTION);
 		}
 		
-		# Exec
+		# Action
 		$action = new $classname($weapon, $player, $defender, $direction);
 		$action->execute();
-		
-		# Announce
-		$payload = $action->payload();
-		$game->sendBinary($payload);
 	}	
 	/**
 	 * Rune
